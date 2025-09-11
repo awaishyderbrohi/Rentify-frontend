@@ -1,0 +1,192 @@
+/* Backdrop blur utilities */
+.backdrop-blur-custom {
+  backdrop-filter: blur(8px);
+}
+
+/* Glassmorphism effect */
+.glassmorphism {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Dropdown animation */
+.dropdown-enter {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+  transition: all 0.2s ease-out;
+  animation: dropdown-enter-animation 0.2s ease-out forwards;
+}
+
+@keyframes dropdown-enter-animation {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdown-enter-active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Logo gradient */
+.logo-gradient {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+}
+
+/* Search shadow */
+.search-shadow {
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Hover lift effect */
+.hover-lift {
+  transition: all 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile backdrop */
+.mobile-backdrop {
+  backdrop-filter: blur(2px);
+}
+
+/* Component specific styles */
+:host {
+  display: block;
+  position: relative;
+  z-index: 50;
+}
+
+/* Navbar container */
+.navbar-container {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+/* Search input focus states */
+.search-input:focus {
+  outline: none;
+  border-color: #64748b;
+  box-shadow: 0 0 0 4px rgba(100, 116, 139, 0.1);
+}
+
+/* Category icon colors */
+.category-icon {
+  transition: transform 0.2s ease;
+}
+.category-icon:hover {
+  transform: scale(1.05);
+}
+.category-icon.blue {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+.category-icon.green {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+.category-icon.purple {
+  background-color: #f3e8ff;
+  color: #9333ea;
+}
+
+/* Button hover effects */
+.btn-primary {
+  transition: all 0.2s ease;
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-secondary {
+  transition: all 0.2s ease;
+}
+.btn-secondary:hover {
+  background-color: #1e293b;
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* Mobile menu styles */
+.mobile-menu {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid rgba(229, 231, 235, 1);
+}
+
+/* Categories dropdown specific styles */
+.categories-dropdown {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(229, 231, 235, 0.2);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Responsive design helpers */
+@media (max-width: 1023px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+/* Animation for arrow rotation */
+.arrow-rotate {
+  transition: transform 0.2s ease;
+}
+
+/* Loading states */
+.loading {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* Focus styles for accessibility */
+button:focus,
+input:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Gradient button styles */
+.gradient-button {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  transition: all 0.2s ease;
+}
+.gradient-button:hover {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Email banner styles */
+.email-banner {
+  background: linear-gradient(90deg, #f59e0b 0%, #ea580c 100%);
+}
+
+/* How it works banner */
+.how-it-works-banner {
+  background-color: #1e293b;
+}
+.how-it-works-banner button:hover {
+  color: #cbd5e1;
+}

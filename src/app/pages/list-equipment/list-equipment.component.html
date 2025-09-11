@@ -1,0 +1,732 @@
+
+    <div class="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-4xl mx-auto">
+
+        <!-- Header Section -->
+        <div class="mb-8">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Create Product Listing</h1>
+              <p class="mt-2 text-slate-600">Fill in the details to list your product on our marketplace</p>
+            </div>
+            <div class="hidden md:flex items-center space-x-2 text-sm text-slate-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>Auto-save enabled</span>
+            </div>
+          </div>
+
+          <!-- Progress Indicator -->
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-sm font-medium text-slate-700">Progress</span>
+              <span class="text-sm text-slate-500">Step {{ currentStep() }} of 5</span>
+            </div>
+            <div class="flex items-center space-x-4">
+              <div *ngFor="let step of [1,2,3,4,5]; let i = index" class="flex items-center">
+                <div class="flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-200"
+                     [class]="currentStep() > step ? 'bg-emerald-500 border-emerald-500 text-white' :
+                             currentStep() === step ? 'bg-blue-500 border-blue-500 text-white' :
+                             'border-slate-300 bg-white text-slate-400'">
+                  <svg *ngIf="currentStep() > step" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                  <span *ngIf="currentStep() <= step" class="text-sm font-semibold">{{ step }}</span>
+                </div>
+                <div *ngIf="i < 4" class="w-20 h-0.5 mx-4 rounded-full"
+                     [class]="currentStep() > step + 1 ? 'bg-emerald-500' : 'bg-slate-200'"></div>
+              </div>
+            </div>
+            <div class="mt-4 grid grid-cols-5 gap-4 text-xs">
+              <span [class]="currentStep() >= 1 ? 'text-slate-700 font-medium' : 'text-slate-400'">Basic Info</span>
+              <span [class]="currentStep() >= 2 ? 'text-slate-700 font-medium' : 'text-slate-400'">Details</span>
+              <span [class]="currentStep() >= 3 ? 'text-slate-700 font-medium' : 'text-slate-400'">Images</span>
+              <span [class]="currentStep() >= 4 ? 'text-slate-700 font-medium' : 'text-slate-400'">Location</span>
+              <span [class]="currentStep() >= 5 ? 'text-slate-700 font-medium' : 'text-slate-400'">Review</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Form Container -->
+        <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+
+          <!-- Status Messages -->
+          <div *ngIf="submitSuccess()" class="bg-emerald-50 border-l-4 border-emerald-400 p-6 m-6 rounded-r-lg">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-sm font-semibold text-emerald-800">Success!</h3>
+                <p class="text-sm text-emerald-700 mt-1">Your product has been listed successfully and is under review.</p>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="submitError()" class="bg-red-50 border-l-4 border-red-400 p-6 m-6 rounded-r-lg">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-sm font-semibold text-red-800">Error</h3>
+                <p class="text-sm text-red-700 mt-1">{{ submitError() }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Form Content -->
+          <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="p-8">
+
+            <!-- Step 1: Basic Information -->
+            <div *ngIf="currentStep() === 1" class="space-y-8">
+              <div class="border-b border-slate-200 pb-6">
+                <h2 class="text-xl font-semibold text-slate-900 mb-2">Basic Information</h2>
+                <p class="text-slate-600">Start with the essential details about your product</p>
+              </div>
+
+              <!-- Product Title -->
+              <div class="space-y-2">
+                <label class="block text-sm font-semibold text-slate-700">Product Title *</label>
+                <input
+                  type="text"
+                  formControlName="title"
+                  placeholder="Enter a descriptive product title"
+                  class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  [class.border-red-500]="isFieldInvalid('title')"
+                  [class.focus:ring-red-500]="isFieldInvalid('title')" />
+                <div *ngIf="isFieldInvalid('title')" class="flex items-center mt-2 text-sm text-red-600">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                  </svg>
+                  {{ getFieldError('title') }}
+                </div>
+              </div>
+
+              <!-- Category and Condition Grid -->
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Category -->
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-slate-700">Category *</label>
+                  <select formControlName="category"
+                          class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                          [class.border-red-500]="isFieldInvalid('category')">
+                    <option value="">Select a category</option>
+                    <option *ngFor="let category of categories" [value]="category.value">{{ category.label }}</option>
+                  </select>
+                  <div *ngIf="isFieldInvalid('category')" class="flex items-center mt-2 text-sm text-red-600">
+                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    {{ getFieldError('category') }}
+                  </div>
+                </div>
+
+                <!-- Condition -->
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-slate-700">Condition *</label>
+                  <div class="grid grid-cols-2 gap-3">
+                    <label class="flex items-center p-3 border border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors"
+                           [class.border-blue-500]="productForm.get('condition')?.value === 'new'"
+                           [class.bg-blue-50]="productForm.get('condition')?.value === 'new'">
+                      <input type="radio" formControlName="condition" value="new" class="w-4 h-4 text-blue-600" />
+                      <span class="ml-2 text-sm font-medium text-slate-700">New</span>
+                    </label>
+                    <label class="flex items-center p-3 border border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors"
+                           [class.border-blue-500]="productForm.get('condition')?.value === 'used'"
+                           [class.bg-blue-50]="productForm.get('condition')?.value === 'used'">
+                      <input type="radio" formControlName="condition" value="used" class="w-4 h-4 text-blue-600" />
+                      <span class="ml-2 text-sm font-medium text-slate-700">Used</span>
+                    </label>
+                    <label class="flex items-center p-3 border border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors"
+                           [class.border-blue-500]="productForm.get('condition')?.value === 'refurbished'"
+                           [class.bg-blue-50]="productForm.get('condition')?.value === 'refurbished'">
+                      <input type="radio" formControlName="condition" value="refurbished" class="w-4 h-4 text-blue-600" />
+                      <span class="ml-2 text-sm font-medium text-slate-700">Refurbished</span>
+                    </label>
+                    <label class="flex items-center p-3 border border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors"
+                           [class.border-blue-500]="productForm.get('condition')?.value === 'damaged'"
+                           [class.bg-blue-50]="productForm.get('condition')?.value === 'damaged'">
+                      <input type="radio" formControlName="condition" value="damaged" class="w-4 h-4 text-blue-600" />
+                      <span class="ml-2 text-sm font-medium text-slate-700">For Parts</span>
+                    </label>
+                  </div>
+                  <div *ngIf="isFieldInvalid('condition')" class="flex items-center mt-2 text-sm text-red-600">
+                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    {{ getFieldError('condition') }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2: Details & Pricing -->
+            <div *ngIf="currentStep() === 2" class="space-y-8">
+              <div class="border-b border-slate-200 pb-6">
+                <h2 class="text-xl font-semibold text-slate-900 mb-2">Product Details & Pricing</h2>
+                <p class="text-slate-600">Provide comprehensive information about your product</p>
+              </div>
+
+              <!-- Description -->
+              <div class="space-y-2">
+                <label class="block text-sm font-semibold text-slate-700">Description *</label>
+                <textarea
+                  formControlName="description"
+                  rows="5"
+                  class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+                  placeholder="Describe your product in detail. Include key features, specifications, and any relevant information..."
+                  [class.border-red-500]="isFieldInvalid('description')"></textarea>
+                <div class="flex justify-between items-center">
+                  <div *ngIf="isFieldInvalid('description')" class="flex items-center text-sm text-red-600">
+                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    {{ getFieldError('description') }}
+                  </div>
+                  <span class="text-sm text-slate-500">{{ productForm.get('description')?.value?.length || 0 }}/1000</span>
+                </div>
+              </div>
+
+              <!-- Pricing Section -->
+              <div class="bg-slate-50 rounded-xl p-6 space-y-6">
+                <h3 class="text-lg font-semibold text-slate-900">Pricing Information</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div class="lg:col-span-2 space-y-2">
+                    <label class="block text-sm font-semibold text-slate-700">Price *</label>
+                    <div class="relative">
+                      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="text-slate-500 font-medium">PKR</span>
+                      </div>
+                      <input
+                        type="number"
+                        formControlName="price"
+                        placeholder="0.00"
+                        class="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        [class.border-red-500]="isFieldInvalid('price')" />
+                    </div>
+                    <div *ngIf="isFieldInvalid('price')" class="flex items-center text-sm text-red-600">
+                      <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                      </svg>
+                      {{ getFieldError('price') }}
+                    </div>
+                  </div>
+                  <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-slate-700">Price Type</label>
+                    <select formControlName="priceType" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white">
+                      <option value="fixed">Fixed Price</option>
+                      <option value="negotiable">Negotiable</option>
+                      <option value="auction">Auction</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Brand & Model -->
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-slate-700">Brand</label>
+                  <input
+                    type="text"
+                    formControlName="brand"
+                    placeholder="Enter brand name"
+                    class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+                </div>
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-slate-700">Model</label>
+                  <input
+                    type="text"
+                    formControlName="model"
+                    placeholder="Enter model"
+                    class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+                </div>
+              </div>
+
+              <!-- Tags -->
+              <div class="space-y-2">
+                <label class="block text-sm font-semibold text-slate-700">Tags</label>
+                <input
+                  type="text"
+                  (keydown.enter)="addTag($event)"
+                  placeholder="Add tags to improve discoverability (press Enter to add)"
+                  class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+                <div class="flex flex-wrap gap-2 mt-3" *ngIf="tags().length > 0">
+                  <span *ngFor="let tag of tags(); let i = index"
+                        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                    {{ tag }}
+                    <button type="button" (click)="removeTag(i)" class="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 transition-colors">
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                      </svg>
+                    </button>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3: Images -->
+            <div *ngIf="currentStep() === 3" class="space-y-8">
+              <div class="border-b border-slate-200 pb-6">
+                <h2 class="text-xl font-semibold text-slate-900 mb-2">Product Images</h2>
+                <p class="text-slate-600">Upload high-quality images to showcase your product</p>
+              </div>
+
+              <!-- Image Upload Area -->
+              <div class="space-y-6">
+                <div class="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 cursor-pointer"
+                     (click)="fileInput.click()"
+                     (dragover)="onDragOver($event)"
+                     (drop)="onDrop($event)">
+                  <div class="mx-auto w-16 h-16 text-slate-400 mb-4">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-full h-full">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                  </div>
+                  <h3 class="text-lg font-semibold text-slate-900 mb-2">Upload Product Images</h3>
+                  <p class="text-slate-600 mb-4">Drag and drop your images here, or click to browse</p>
+                  <div class="flex items-center justify-center space-x-4 text-sm text-slate-500">
+                    <span>• PNG, JPG, WEBP up to 10MB</span>
+                    <span>• Maximum 8 images</span>
+                    <span>• First image will be the main photo</span>
+                  </div>
+                </div>
+
+                <input #fileInput type="file" multiple accept="image/*" (change)="onFileSelect($event)" class="hidden" />
+
+                <!-- Image Preview Grid -->
+                <div *ngIf="productImages().length > 0" class="space-y-4">
+                  <h3 class="text-lg font-semibold text-slate-900">Uploaded Images ({{ productImages().length }}/8)</h3>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div *ngFor="let image of productImages(); let i = index"
+                         class="relative group bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                      <div class="aspect-square">
+                        <img [src]="image.preview" [alt]="'Product image ' + (i + 1)"
+                             class="w-full h-full object-cover">
+                      </div>
+                      <button type="button"
+                              (click)="removeImage(i)"
+                              class="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                      </button>
+                      <div *ngIf="i === 0" class="absolute bottom-2 left-2 px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded">
+                        Main Photo
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div *ngIf="productImages().length === 0" class="flex items-center text-sm text-red-600">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                  </svg>
+                  At least one image is required
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 4: Location & Contact -->
+            <div *ngIf="currentStep() === 4" class="space-y-8">
+              <div class="border-b border-slate-200 pb-6">
+                <h2 class="text-xl font-semibold text-slate-900 mb-2">Location & Contact Information</h2>
+                <p class="text-slate-600">Help buyers know where to find you and how to get in touch</p>
+              </div>
+
+              <!-- Address -->
+              <div class="space-y-2">
+                <label class="block text-sm font-semibold text-slate-700">Complete Address *</label>
+                <textarea
+                  formControlName="address"
+                  rows="3"
+                  class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+                  placeholder="Enter your complete address including street, area, and landmarks"
+                  [class.border-red-500]="isFieldInvalid('address')"></textarea>
+                <div *ngIf="isFieldInvalid('address')" class="flex items-center text-sm text-red-600">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                  </svg>
+                  {{ getFieldError('address') }}
+                </div>
+              </div>
+
+              <!-- City & Area -->
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-slate-700">City *</label>
+                  <select formControlName="city"
+                          (change)="onCityChange()"
+                          class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                          [class.border-red-500]="isFieldInvalid('city')">
+                    <option value="">Select your city</option>
+                    <option *ngFor="let city of cities" [value]="city">{{ city }}</option>
+                  </select>
+                  <div *ngIf="isFieldInvalid('city')" class="flex items-center text-sm text-red-600">
+                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    {{ getFieldError('city') }}
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-slate-700">Area/Locality</label>
+                  <input
+                    type="text"
+                    formControlName="area"
+                    placeholder="Enter specific area or locality"
+                    class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+                </div>
+              </div>
+
+              <!-- Interactive Map Section -->
+              <div class="bg-slate-50 rounded-xl p-6 space-y-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-lg font-semibold text-slate-900">Pin Your Location</h3>
+                  <button type="button"
+                          (click)="getCurrentLocation()"
+                          [disabled]="isLoadingLocation()"
+                          class="inline-flex items-center px-3 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:ring-2 focus:ring-blue-500 transition-colors disabled:opacity-50">
+                    <svg *ngIf="!isLoadingLocation()" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <svg *ngIf="isLoadingLocation()" class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {{ isLoadingLocation() ? 'Getting Location...' : 'Use My Location' }}
+                  </button>
+                </div>
+                <p class="text-sm text-slate-600">Click on the map to set your exact location. This helps buyers find you more easily.</p>
+
+                <!-- Map Container -->
+                <div class="relative">
+                  <div #mapContainer
+                       class="w-full h-80 rounded-lg border border-slate-300 bg-slate-100 relative overflow-hidden">
+                    <!-- Map loading state -->
+                    <div *ngIf="!mapInitialized()" class="absolute inset-0 flex items-center justify-center bg-slate-100">
+                      <div class="text-center">
+                        <svg class="animate-spin mx-auto h-8 w-8 text-slate-400 mb-2" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p class="text-sm text-slate-500">Loading map...</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Selected coordinates display -->
+                  <div *ngIf="selectedCoordinates()" class="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center">
+                        <svg class="w-4 h-4 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm font-medium text-blue-900">Location Selected</span>
+                      </div>
+                      <button type="button"
+                              (click)="clearLocation()"
+                              class="text-sm text-blue-600 hover:text-blue-800 underline">
+                        Clear
+                      </button>
+                    </div>
+                    <p class="text-xs text-blue-700 mt-1">
+                      Coordinates: {{ selectedCoordinates()?.lat | number:'1.6-6' }}, {{ selectedCoordinates()?.lng | number:'1.6-6' }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Contact Information -->
+              <div class="bg-slate-50 rounded-xl p-6 space-y-6">
+                <h3 class="text-lg font-semibold text-slate-900">Contact Information</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-slate-700">Phone Number *</label>
+                    <input
+                      type="tel"
+                      formControlName="phone"
+                      placeholder="+92 300 1234567"
+                      class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                      [class.border-red-500]="isFieldInvalid('phone')" />
+                    <div *ngIf="isFieldInvalid('phone')" class="flex items-center text-sm text-red-600">
+                      <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                      </svg>
+                      {{ getFieldError('phone') }}
+                    </div>
+                  </div>
+                  <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-slate-700">Email (Optional)</label>
+                    <input
+                      type="email"
+                      formControlName="email"
+                      placeholder="your.email@example.com"
+                      class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                      [class.border-red-500]="isFieldInvalid('email')" />
+                    <div *ngIf="isFieldInvalid('email')" class="flex items-center text-sm text-red-600">
+                      <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                      </svg>
+                      {{ getFieldError('email') }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Delivery Options -->
+              <div class="space-y-4">
+                <h3 class="text-lg font-semibold text-slate-900">Delivery & Fulfillment Options</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <label class="flex items-center p-4 border border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors"
+                         [class.border-blue-500]="productForm.get('pickupAvailable')?.value"
+                         [class.bg-blue-50]="productForm.get('pickupAvailable')?.value">
+                    <input type="checkbox" formControlName="pickupAvailable" class="w-4 h-4 text-blue-600 rounded" />
+                    <div class="ml-3">
+                      <div class="text-sm font-semibold text-slate-900">Pickup Available</div>
+                      <div class="text-xs text-slate-600">Buyer can collect from your location</div>
+                    </div>
+                  </label>
+                  <label class="flex items-center p-4 border border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors"
+                         [class.border-blue-500]="productForm.get('deliveryAvailable')?.value"
+                         [class.bg-blue-50]="productForm.get('deliveryAvailable')?.value">
+                    <input type="checkbox" formControlName="deliveryAvailable" class="w-4 h-4 text-blue-600 rounded" />
+                    <div class="ml-3">
+                      <div class="text-sm font-semibold text-slate-900">Local Delivery</div>
+                      <div class="text-xs text-slate-600">You'll deliver within city</div>
+                    </div>
+                  </label>
+                  <label class="flex items-center p-4 border border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors"
+                         [class.border-blue-500]="productForm.get('shippingAvailable')?.value"
+                         [class.bg-blue-50]="productForm.get('shippingAvailable')?.value">
+                    <input type="checkbox" formControlName="shippingAvailable" class="w-4 h-4 text-blue-600 rounded" />
+                    <div class="ml-3">
+                      <div class="text-sm font-semibold text-slate-900">Nationwide Shipping</div>
+                      <div class="text-xs text-slate-600">Ship anywhere in Pakistan</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 5: Review -->
+            <div *ngIf="currentStep() === 5" class="space-y-8">
+              <div class="border-b border-slate-200 pb-6">
+                <h2 class="text-xl font-semibold text-slate-900 mb-2">Review Your Listing</h2>
+                <p class="text-slate-600">Please review all information before publishing your product</p>
+              </div>
+
+              <!-- Product Preview Card -->
+              <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                <div class="p-6">
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                    <!-- Images Section -->
+                    <div class="space-y-4">
+                      <div *ngIf="productImages().length > 0" class="relative">
+                        <div class="aspect-square bg-slate-100 rounded-xl overflow-hidden">
+                          <img [src]="productImages()[0].preview"
+                               class="w-full h-full object-cover"
+                               [alt]="productForm.get('title')?.value" />
+                        </div>
+                        <div *ngIf="productImages().length > 1" class="grid grid-cols-4 gap-2 mt-3">
+                          <div *ngFor="let image of productImages().slice(1, 5); let i = index"
+                               class="aspect-square bg-slate-100 rounded-lg overflow-hidden">
+                            <img [src]="image.preview" class="w-full h-full object-cover" />
+                          </div>
+                        </div>
+                        <div *ngIf="productImages().length > 5"
+                             class="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-sm">
+                          +{{ productImages().length - 5 }} more
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Product Details -->
+                    <div class="space-y-6">
+                      <!-- Title & Category -->
+                      <div>
+                        <h3 class="text-2xl font-bold text-slate-900 mb-2">{{ productForm.get('title')?.value }}</h3>
+                        <div class="flex items-center space-x-3 mb-4">
+                          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                            {{ getCategoryLabel(productForm.get('category')?.value) }}
+                          </span>
+                          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                            {{ productForm.get('condition')?.value | titlecase }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <!-- Price -->
+                      <div class="border-l-4 border-blue-500 pl-4">
+                        <div class="text-3xl font-bold text-slate-900">
+                          PKR {{ productForm.get('price')?.value | number:'1.0-0' }}
+                        </div>
+                        <div class="text-sm text-slate-600 capitalize">{{ productForm.get('priceType')?.value }} price</div>
+                      </div>
+
+                      <!-- Specifications -->
+                      <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div *ngIf="productForm.get('brand')?.value">
+                          <div class="font-semibold text-slate-700">Brand</div>
+                          <div class="text-slate-600">{{ productForm.get('brand')?.value }}</div>
+                        </div>
+                        <div *ngIf="productForm.get('model')?.value">
+                          <div class="font-semibold text-slate-700">Model</div>
+                          <div class="text-slate-600">{{ productForm.get('model')?.value }}</div>
+                        </div>
+                        <div>
+                          <div class="font-semibold text-slate-700">Location</div>
+                          <div class="text-slate-600">{{ productForm.get('city')?.value }}<span *ngIf="productForm.get('area')?.value">, {{ productForm.get('area')?.value }}</span></div>
+                        </div>
+                        <div *ngIf="selectedCoordinates()">
+                          <div class="font-semibold text-slate-700">GPS Location</div>
+                          <div class="text-slate-600">Pinned on map</div>
+                        </div>
+                      </div>
+
+                      <!-- Description -->
+                      <div>
+                        <div class="font-semibold text-slate-700 mb-2">Description</div>
+                        <p class="text-slate-600 leading-relaxed">{{ productForm.get('description')?.value }}</p>
+                      </div>
+
+                      <!-- Tags -->
+                      <div *ngIf="tags().length > 0">
+                        <div class="font-semibold text-slate-700 mb-2">Tags</div>
+                        <div class="flex flex-wrap gap-2">
+                          <span *ngFor="let tag of tags()"
+                                class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-slate-100 text-slate-700">
+                            {{ tag }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <!-- Delivery Options -->
+                      <div *ngIf="productForm.get('pickupAvailable')?.value || productForm.get('deliveryAvailable')?.value || productForm.get('shippingAvailable')?.value">
+                        <div class="font-semibold text-slate-700 mb-2">Available Options</div>
+                        <div class="flex flex-wrap gap-2">
+                          <span *ngIf="productForm.get('pickupAvailable')?.value"
+                                class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                            </svg>
+                            Pickup
+                          </span>
+                          <span *ngIf="productForm.get('deliveryAvailable')?.value"
+                                class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
+                              <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1V8a1 1 0 00-1-1h-3z"/>
+                            </svg>
+                            Local Delivery
+                          </span>
+                          <span *ngIf="productForm.get('shippingAvailable')?.value"
+                                class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                            </svg>
+                            Shipping
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Terms and Conditions -->
+              <div class="bg-slate-50 rounded-xl p-6">
+                <div class="flex items-start space-x-3">
+                  <input type="checkbox"
+                         formControlName="agreeToTerms"
+                         class="w-5 h-5 text-blue-600 rounded mt-0.5"
+                         [class.border-red-500]="isFieldInvalid('agreeToTerms')" />
+                  <div class="flex-1">
+                    <label class="text-sm font-medium text-slate-700 cursor-pointer">
+                      I agree to the <a href="#" class="text-blue-600 hover:text-blue-800 underline">Terms of Service</a>
+                      and <a href="#" class="text-blue-600 hover:text-blue-800 underline">Privacy Policy</a>
+                    </label>
+                    <div *ngIf="isFieldInvalid('agreeToTerms')" class="flex items-center mt-2 text-sm text-red-600">
+                      <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                      </svg>
+                      {{ getFieldError('agreeToTerms') }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Navigation Footer -->
+            <div class="flex items-center justify-between pt-8 border-t border-slate-200">
+              <button
+                *ngIf="currentStep() > 1"
+                type="button"
+                (click)="previousStep()"
+                class="inline-flex items-center px-6 py-3 border border-slate-300 rounded-lg text-slate-700 bg-white hover:bg-slate-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Previous Step
+              </button>
+
+              <div class="ml-auto">
+                <button
+                  *ngIf="currentStep() < 5"
+                  type="button"
+                  (click)="nextStep()"
+                  [disabled]="!isCurrentStepValid()"
+                  class="inline-flex items-center px-8 py-3 border border-transparent rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200">
+                  Continue
+                  <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </button>
+
+                <button
+                  *ngIf="currentStep() === 5"
+                  type="submit"
+                  [disabled]="productForm.invalid || isLoading() || submitSuccess()"
+                  class="inline-flex items-center px-8 py-3 border border-transparent rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 min-w-[160px]">
+
+                  <svg *ngIf="isLoading()" class="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+
+                  <svg *ngIf="submitSuccess()" class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                  </svg>
+
+                  <span *ngIf="!isLoading() && !submitSuccess()">Publish Listing</span>
+                  <span *ngIf="isLoading()">Publishing...</span>
+                  <span *ngIf="submitSuccess()">Published!</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Help Section -->
+        <div class="mt-8 text-center">
+          <div class="inline-flex items-center space-x-6 text-sm text-slate-600">
+            <button type="button" class="inline-flex items-center hover:text-slate-900 transition-colors">
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+              </svg>
+              Contact Support
+            </button>
+            <span class="text-slate-400">•</span>
+            <span>Questions? We're here to help</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
