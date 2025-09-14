@@ -69,7 +69,7 @@
         </button>
 
         <!-- Logo -->
-        <a  (click)="OnLogo()" class="flex items-center space-x-3 group">
+        <a  (click)="OnLogo()" class="flex items-center space-x-3 group cursor-pointer">
           <div class="w-11 h-11 logo-gradient rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-200 shadow-md">
             <span class="text-white font-bold text-lg">R</span>
           </div>
@@ -80,41 +80,6 @@
         </a>
       </div>
 
-      <!-- Center Section - Search (Desktop) -->
-      <div class="hidden lg:flex flex-1 max-w-lg mx-5">
-        <div class="w-full flex bg-white rounded-lg border border-gray-200 search-shadow hover-lift focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-100 transition-all">
-          <div class="flex-1 relative">
-            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-            <input
-              type="text"
-              [(ngModel)]="searchQuery"
-              placeholder="Search equipment, tools..."
-              class="w-full pl-9 pr-3 py-2.5 bg-transparent focus:outline-none text-gray-900 placeholder-gray-400 text-sm">
-          </div>
-          <div class="w-px bg-gray-200"></div>
-          <div class="relative">
-            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
-            <input
-              type="text"
-              [(ngModel)]="locationQuery"
-              placeholder="Location"
-              class="w-26 pl-9 pr-3 py-2.5 bg-transparent focus:outline-none text-gray-900 placeholder-gray-400 text-sm">
-          </div>
-          <button
-            (click)="onSearch()"
-            class="px-4 py-2.5 bg-slate-900 text-white font-medium rounded-r-lg hover:bg-slate-800 transition-colors duration-200 text-sm">
-            Search
-          </button>
-        </div>
-      </div>
-
-      <!-- Right Section -->
-      <div class="flex items-center space-x-2">
         <!-- Categories Dropdown -->
         <div class="relative hidden lg:block categories-dropdown-container">
           <button
@@ -154,6 +119,103 @@
             </div>
           </div>
         </div>
+
+      <!-- Center Section - Enhanced Search (Desktop) -->
+      <div class="hidden lg:flex flex-1 max-w-lg mx-5">
+        <div class="w-full flex bg-white rounded-lg border border-gray-200 search-shadow hover-lift focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-100 transition-all">
+          <!-- Product Search -->
+          <div class="flex-1 relative">
+            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input
+              type="text"
+              [(ngModel)]="searchQuery"
+              placeholder="Search equipment, tools..."
+              class="w-full pl-9 pr-3 py-2.5 bg-transparent focus:outline-none text-gray-900 placeholder-gray-400 text-sm">
+          </div>
+          <div class="w-px bg-gray-200"></div>
+
+          <!-- Location Search with Dropdown -->
+          <div class="relative location-dropdown-container">
+            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <input
+              #locationInput
+              type="text"
+              [ngModel]="locationQuery()"
+              (input)="onLocationInputChange($event)"
+              (focus)="onLocationInputFocus()"
+              placeholder="Location"
+              class="w-full pl-9 pr-8 py-2.5 bg-transparent focus:outline-none text-gray-900 placeholder-gray-400 text-sm">
+
+            <!-- Clear Location Button -->
+            <button
+              *ngIf="selectedLocation()"
+              (click)="clearLocation()"
+              class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+
+            <!-- Location Suggestions Dropdown -->
+            <div
+              *ngIf="isLocationDropdownOpen()"
+              class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
+
+              <!-- Loading State -->
+              <div *ngIf="isLoadingLocationSuggestions()" class="p-3 text-center text-gray-500">
+                <div class="inline-flex items-center space-x-2">
+                  <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-600"></div>
+                  <span class="text-sm">Searching...</span>
+                </div>
+              </div>
+
+              <!-- Suggestions List -->
+              <div *ngIf="!isLoadingLocationSuggestions() && locationSuggestions().length > 0">
+                <button
+                  *ngFor="let suggestion of locationSuggestions(); trackBy: trackLocationSuggestion"
+                  (click)="onLocationSuggestionClick(suggestion)"
+                  class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 flex items-start space-x-3">
+                  <svg class="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  <div class="flex-1 min-w-0">
+                    <div class="text-sm font-medium text-gray-900 truncate">
+                      {{ formatLocationDisplay(suggestion) }}
+                    </div>
+                    <div class="text-xs text-gray-500 truncate">
+                      {{ suggestion.display_name }}
+                    </div>
+                  </div>
+                </button>
+              </div>
+
+              <!-- No Results -->
+              <div *ngIf="!isLoadingLocationSuggestions() && locationSuggestions().length === 0 && locationQuery().length >= 2"
+                   class="p-4 text-center text-gray-500 text-sm">
+                No locations found
+              </div>
+            </div>
+          </div>
+
+          <!-- Search Button -->
+          <button
+            (click)="onSearch()"
+            [disabled]="!searchQuery().trim()"
+            class="px-4 py-2.5 bg-slate-900 text-white font-medium rounded-r-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 text-sm">
+            Search
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Section -->
+      <div class="flex items-center space-x-2">
+
 
         <!-- For Business Link -->
         <button
@@ -291,26 +353,102 @@
       </div>
     </div>
 
-    <!-- Mobile Search Bar -->
+    <!-- Enhanced Mobile Search Bar -->
     <div class="lg:hidden pb-4">
-      <div class="flex bg-white rounded-lg border border-gray-200 search-shadow focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-100 transition-all">
-        <div class="flex-1 relative">
-          <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
-          <input
-            type="text"
-            [(ngModel)]="searchQuery"
-            placeholder="Search equipment..."
-            class="w-full pl-10 pr-4 py-2.5 bg-transparent focus:outline-none text-gray-900 text-sm">
+      <div class="space-y-3">
+        <!-- Product Search -->
+        <div class="flex bg-white rounded-lg border border-gray-200 search-shadow focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-100 transition-all">
+          <div class="flex-1 relative">
+            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input
+              type="text"
+              [(ngModel)]="searchQuery"
+              placeholder="Search equipment..."
+              class="w-full pl-10 pr-4 py-2.5 bg-transparent focus:outline-none text-gray-900 text-sm">
+          </div>
+          <button
+            (click)="onSearch()"
+            [disabled]="!searchQuery().trim()"
+            class="px-4 py-2.5 bg-slate-900 text-white rounded-r-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </button>
         </div>
-        <button
-          (click)="onSearch()"
-          class="px-4 py-2.5 bg-slate-900 text-white rounded-r-lg hover:bg-slate-800 transition-colors">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
-        </button>
+
+        <!-- Mobile Location Search -->
+        <div class="relative location-dropdown-container">
+          <div class="flex bg-white rounded-lg border border-gray-200 search-shadow focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-100 transition-all">
+            <div class="flex-1 relative">
+              <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              <input
+                type="text"
+                [ngModel]="locationQuery()"
+                (input)="onLocationInputChange($event)"
+                (focus)="onLocationInputFocus()"
+                placeholder="Enter location..."
+                class="w-full pl-10 pr-10 py-2.5 bg-transparent focus:outline-none text-gray-900 text-sm">
+
+              <!-- Mobile Clear Location Button -->
+              <button
+                *ngIf="selectedLocation()"
+                (click)="clearLocation()"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Mobile Location Suggestions -->
+          <div
+            *ngIf="isLocationDropdownOpen()"
+            class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+
+            <!-- Loading State -->
+            <div *ngIf="isLoadingLocationSuggestions()" class="p-3 text-center text-gray-500">
+              <div class="inline-flex items-center space-x-2">
+                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-600"></div>
+                <span class="text-sm">Searching...</span>
+              </div>
+            </div>
+
+            <!-- Mobile Suggestions List -->
+            <div *ngIf="!isLoadingLocationSuggestions() && locationSuggestions().length > 0">
+              <button
+                *ngFor="let suggestion of locationSuggestions()"
+                (click)="onLocationSuggestionClick(suggestion)"
+                class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0">
+                <div class="flex items-start space-x-3">
+                  <svg class="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  <div class="flex-1 min-w-0">
+                    <div class="text-sm font-medium text-gray-900">
+                      {{ formatLocationDisplay(suggestion) }}
+                    </div>
+                    <div class="text-xs text-gray-500 truncate">
+                      {{ suggestion.display_name }}
+                    </div>
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            <!-- No Results -->
+            <div *ngIf="!isLoadingLocationSuggestions() && locationSuggestions().length === 0 && locationQuery().length >= 2"
+                 class="p-4 text-center text-gray-500 text-sm">
+              No locations found
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -420,7 +558,7 @@
     </div>
 
     <!-- Common Actions (Show for all users) -->
-    <div class="space-y-3">
+    <div class="space-y-3 mt-6">
       <button
         (click)="onForBusiness()"
         class="block w-full text-center py-3 text-gray-700 hover:text-slate-900 hover:bg-gray-50 rounded-lg font-medium transition-colors">

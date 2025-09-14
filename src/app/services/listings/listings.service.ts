@@ -42,4 +42,12 @@ getAllUserListings(): Observable<BaseResponse<Listing[]>>{
   return this.http.get<BaseResponse<Listing[]>>(`${this.BASE_URL}/user-listings`,{withCredentials:true});
 }
 
+deleteListingById(id:string){
+  return this.http.delete(`${this.BASE_URL}/delete-by-id/${id}`,{withCredentials:true});
+}
+
+getListingById(id:string):Observable<BaseResponse<Listing>>{
+  return this.http.get<BaseResponse<Listing>>(`${this.BASE_URL}/${id}`, {withCredentials:true});
+}
+
 }

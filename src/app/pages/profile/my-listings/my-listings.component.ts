@@ -1,10 +1,12 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { Router, RouterModule } from '@angular/router';
+import { identity, Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../../services/auth/auth.service';
 import { ListingsService } from '../../../services/listings/listings.service';
 import { FormsModule } from '@angular/forms';
+import { ToasterService } from '../../../services/toaster/toaster.service';
+import { ConfirmationService } from '../../../shared/services/delete-confirmation.service';
 
 interface LocationCoordinates {
   lat: number;
@@ -62,6 +64,9 @@ export interface Listing {
   `]
 })
 export class MyListingsComponent implements OnInit, OnDestroy {
+    private confirmationService = inject(ConfirmationService);
+
+
   listings: Listing[] = [];
   filteredListings: Listing[] = [];
   isLoading = true;
@@ -81,8 +86,10 @@ export class MyListingsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   constructor(
+    private router:Router,
     private authService: AuthService,
-    private listingsService: ListingsService
+    private listingsService: ListingsService,
+    private toaster:ToasterService
   ) {}
 
   ngOnInit() {
@@ -144,8 +151,7 @@ export class MyListingsComponent implements OnInit, OnDestroy {
   }
 
   createNewListing() {
-    // Navigate to create listing page
-    console.log('Navigate to create listing');
+    this.router.navigate(['/list-equipment'])
   }
 
   editListing(listingId: string) {
@@ -172,11 +178,23 @@ export class MyListingsComponent implements OnInit, OnDestroy {
 
   deleteListing(listingId: string) {
     if (confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
-      this.listings = this.listings.filter(l => l.id !== listingId);
-      this.updateStats();
-      this.filterListings();
+      this.listingsService.deleteListingById(listingId).subscribe({
+        next:(res)=>{
+          this.toaster.show("Listing deleted successfully!",'success');
+          this.updateStats();
+          this.filterListings();
+        },
+
+        error:(error)=>{
+          this.toaster.show("internal server error",'error')}
+      })
+
     }
     this.openDropdown = null;
+  }
+
+  goToProduct(id:string){
+    this.router.navigate(['/products',id])
   }
 
   getStatusBadgeClass(status: string): string {

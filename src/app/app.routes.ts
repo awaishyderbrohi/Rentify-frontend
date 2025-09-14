@@ -7,7 +7,8 @@ import { RegisterComponent } from './pages/register/register.component';
 import { AuthGuardService } from './services/auth/auth-guard.service';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { ForgetComponent } from './pages/forget/forget.component';
-import { RentalPageComponent } from './pages/product/product.component';
+import { ProductListingFormComponent } from './pages/list-equipment/list-equipment.component';
+import { ProductPageComponent } from './pages/product/product.component';
 
 
 export const routes: Routes = [
@@ -27,6 +28,6 @@ export const routes: Routes = [
     canActivate:[AuthGuardService],
     component:ProfileComponent
   },
-  { path:'products/product',component:RentalPageComponent},
+  { path:'products/:id',component:ProductPageComponent},
   { path:'**', component:PageNotFoundComponent}
 ];
