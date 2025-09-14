@@ -256,7 +256,7 @@
         </div>
       </ng-template>
 
-              <span class="hidden sm:block text-sm font-medium text-gray-700">{{ user.firstName || user.email}}</span>
+              <span class="hidden sm:block text-sm font-medium text-gray-700">{{ user.firstName || user.email}} {{ user.lastName}}</span>
               <svg
                 class="w-4 h-4 text-gray-400 transition-transform"
                 [style.transform]="isUserDropdownOpen() ? 'rotate(180deg)' : 'rotate(0deg)'"
@@ -275,11 +275,23 @@
               <!-- User Info Header -->
               <div class="p-4 border-b border-gray-100">
                 <div class="flex items-center space-x-3">
-                  <div class="w-12 h-12 bg-gradient-to-r from-slate-800 to-slate-900 rounded-full flex items-center justify-center text-white font-medium">
-                    {{ getInitials(user.firstName || user.email) }}
-                  </div>
+
+                <div *ngIf="user?.profilePicUrl; else initials">
+              <img
+              [src]="user.profilePicUrl"
+              alt="Profile"
+              class="w-8 h-8 rounded-full object-cover"
+              />
+              </div>
+
+              <ng-template #initials>
+              <div class="w-8 h-8 bg-gradient-to-r from-slate-800 to-slate-900 rounded-full flex items-center justify-center text-white text-sm font-medium">
+               {{ getInitials(user.firstName) }}
+              </div>
+            </ng-template>
+
                   <div>
-                    <p class="font-semibold text-gray-900">{{ user.firstName || 'User' }}</p>
+                    <p class="font-semibold text-gray-900">{{ user.firstName || 'User' }} {{ user.lastName }} </p>
                     <p class="text-sm text-gray-500">{{ user.email }}</p>
                   </div>
                 </div>
