@@ -9,6 +9,7 @@ import { ProfileComponent } from './pages/profile/profile.component';
 import { ForgetComponent } from './pages/forget/forget.component';
 import { ProductListingFormComponent } from './pages/list-equipment/list-equipment.component';
 import { ProductPageComponent } from './pages/product/product.component';
+import { SearchResultsComponent } from './pages/search-result/search-result.component';
 
 
 export const routes: Routes = [
@@ -28,6 +29,8 @@ export const routes: Routes = [
     canActivate:[AuthGuardService],
     component:ProfileComponent
   },
+   {path:"search",component:SearchResultsComponent},
   { path:'products/:id',component:ProductPageComponent},
-  { path:'**', component:PageNotFoundComponent}
+  { path:'**', component:PageNotFoundComponent},
+
 ];
