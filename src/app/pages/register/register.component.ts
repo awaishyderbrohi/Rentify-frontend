@@ -40,7 +40,7 @@ export class RegisterComponent implements OnInit {
   private phoneValidator(control: AbstractControl): {[key: string]: any} | null {
     if (!control.value) return null;
 
-    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    const phoneRegex = /^[0-9][\d]{0,15}$/;
     const cleanPhone = control.value.replace(/[\s\-\(\)]/g, '');
 
     return phoneRegex.test(cleanPhone) ? null : { 'invalidPhone': true };
@@ -114,7 +114,7 @@ export class RegisterComponent implements OnInit {
   this.authService.registeration(userData).subscribe({
     next: (res) => {
       if (res.status === 'CREATED') {
-        this.toaster.show('User Registration Completed', 'success');
+        this.toaster.show('Registration completed. Sign in to access your account.', 'success');
 
         this.signupForm.reset(); // ✅ Reset only on success
       }
@@ -127,7 +127,7 @@ export class RegisterComponent implements OnInit {
   } else if (error.error && error.error.message) {
     this.globalError = error.error.message;
   } else {
-    this.globalError = 'Registration failed. Please try again.';
+    this.globalError = 'Registration failed, something went wrong!. Please try again.';
   }
   console.error('Registration error:', error);
   this.isLoading = false;

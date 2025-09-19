@@ -62,76 +62,7 @@ interface TrustIndicator {
           </div>
         </div>
 
-        <!-- Prominent Search Section -->
-        <div class="max-w-5xl mx-auto mb-16">
-          <div class="card bg-base-100 shadow-2xl border border-base-300">
-            <div class="card-body p-8">
-              <div class="text-center mb-8">
-                <h2 class="card-title text-3xl font-bold text-base-content mb-2 justify-center">
-                  Find Equipment Now
-                </h2>
-                <p class="text-base-content opacity-70">Search from over 10,000+ verified listings</p>
-              </div>
 
-              <!-- Search Form -->
-              <div class="bg-base-200 rounded-xl p-6 mb-6">
-                <div class="flex flex-col lg:flex-row gap-4">
-                  <div class="flex-1 relative">
-                    <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 text-base-content opacity-40 w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                    <input
-                      type="text"
-                      placeholder="Search equipment (e.g., Canon EOS R5, Construction Tools)"
-                      class="input input-bordered w-full pl-14 pr-4 py-5 h-auto text-lg focus:border-primary"
-                      [(ngModel)]="productSearch.product"
-                      (keyup.enter)="handleSearch()"
-                    />
-                  </div>
-
-                  <div class="lg:w-64 relative">
-                    <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 text-base-content opacity-40 w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    <input
-                      type="text"
-                      placeholder="Location"
-                      class="input input-bordered w-full pl-14 pr-4 py-5 h-auto text-lg focus:border-primary"
-                      [(ngModel)]="productSearch.location"
-                      (keyup.enter)="handleSearch()"
-                    />
-                  </div>
-
-                  <button
-                    (click)="handleSearch()"
-                    class="btn btn-primary px-10 py-5 h-auto text-lg font-semibold group hover:scale-105 transition-transform"
-                  >
-                    Search
-                    <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Popular Categories -->
-              <div class="text-center">
-                <p class="text-sm text-base-content opacity-60 mb-4 font-medium">Browse Popular Categories:</p>
-                <div class="flex flex-wrap justify-center gap-3">
-                  <button
-                    *ngFor="let category of popularCategories"
-                    class="btn btn-outline btn-sm flex items-center px-4 py-3 hover:btn-primary transition-all duration-200 group"
-                    (click)="selectCategory(category.name)"
-                  >
-                    <span [innerHTML]="category.icon" class="w-4 h-4 mr-2 group-hover:scale-110 transition-transform"></span>
-                    <span class="text-sm font-medium">{{category.name}}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <!-- Stats Section -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">

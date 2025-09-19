@@ -294,15 +294,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
     // Navigate to search results with parameters
     this.router.navigate(['/search'],
-    //   {
-    //   queryParams: {
-    //     q: searchParams.product,
-    //     location: searchParams.location.search,
-    //     lat: searchParams.location.latitude,
-    //     lng: searchParams.location.longitude,
-    //     placeId: searchParams.location.placeId
-    //   }
-    // }
+      {
+      queryParams: {
+        q: searchParams.product,
+        location: searchParams.location.search,
+        lat: searchParams.location.latitude,
+        lng: searchParams.location.longitude,
+      }
+    }
   );
   }
 

@@ -1,10 +1,11 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ProductFormData } from '../../pages/list-equipment/list-equipment.component';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Listing } from '../../pages/profile/my-listings/my-listings.component';
 import { BaseResponse } from '../../models/BaseResponse.model';
+import { BasePageRes } from '../../models/BasePageRes.model';
 
 @Injectable({
   providedIn: 'root'
@@ -48,6 +49,20 @@ deleteListingById(id:string){
 
 getListingById(id:string):Observable<BaseResponse<Listing>>{
   return this.http.get<BaseResponse<Listing>>(`${this.BASE_URL}/${id}`, {withCredentials:true});
+}
+
+search(q:string,location:string,lat:number,lon:number,page:number): Observable<BasePageRes<Listing>>{
+ if(page != 0 ){
+  page = page-1
+ }
+let params = new HttpParams();
+params = params.set('query', q);
+params = params.set('latitude', lat.toString());
+params = params.set('longitude', lon.toString());
+params = params.set('page', page.toString());
+
+  return this.http.get<BasePageRes<Listing>>(`${this.BASE_URL}/search`,{params,  withCredentials:true});
+
 }
 
 }

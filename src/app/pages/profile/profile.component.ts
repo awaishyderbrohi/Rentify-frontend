@@ -78,7 +78,21 @@ export class ProfileComponent implements OnInit, OnDestroy {
     });
 
     // Subscribe to user data
-    this.authService.user$
+    this.getUserData();
+
+    if (!this.user) {
+      this.authService.loadUser();
+    }
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.stopCountdown();
+  }
+
+  getUserData(){
+        this.authService.user$
       .pipe(takeUntil(this.destroy$))
       .subscribe(user => {
         this.user = user;
@@ -90,16 +104,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
           }
         }
       });
-
-    if (!this.user) {
-      this.authService.loadUser();
-    }
-  }
-
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
-    this.stopCountdown();
   }
 
   navigateToSection(section: string) {
@@ -168,6 +172,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
       next: () => {
         this.isUploading = false;
         this.successMessage = 'Profile image updated successfully!';
+        setTimeout(() => {
+        window.location.reload();   // Refresh page
+        }, 1000);
       },
       error: () => {
         this.isUploading = false;

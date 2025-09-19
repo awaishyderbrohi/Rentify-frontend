@@ -104,6 +104,8 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
   // Search and filter state
   searchQuery = '';
   locationQuery = '';
+  latitude = 0;
+  longitude = 0;
   currentSort = 'relevance_desc';
   selectedRadius = 0;
   priceRange = { min: 0, max: 10000 };
@@ -169,6 +171,7 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
     return results.slice(startIndex, startIndex + this.itemsPerPage);
   });
 
+  constructor(private listingService:ListingsService){}
   private destroy$ = new Subject<void>();
 
   ngOnInit() {
@@ -176,6 +179,8 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
       this.searchQuery = params['q'] || '';
       this.locationQuery = params['location'] || '';
+      this.latitude = params['lat'] || 0;
+      this.longitude = params['lng'] || 0;
       this.currentPage.set(parseInt(params['page']) || 1);
 
       if (params['category']) {
@@ -186,6 +191,20 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
       }
 
       this.performSearch();
+
+      console.log(this.searchQuery)
+      console.log(this.latitude);
+      console.log(this.locationQuery);
+      console.log("longitude", this.longitude);
+      console.log("current page", this.currentPage);
+      this.listingService.search(this.searchQuery,this.locationQuery,this.latitude,this.longitude,this.currentPage()).subscribe({
+        next:(res)=>{
+          console.log("search result: ", res.content);
+        },
+        error:(err)=>{
+          console.log(err.message);
+        }
+      });
     });
 
     // Load view mode preference
@@ -200,8 +219,10 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+
   performSearch() {
     this.isLoading.set(true);
+
 
     const searchParams: SearchParams = {
       query: this.searchQuery,
@@ -211,6 +232,7 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
       sort: this.currentSort,
       filters: this.selectedFilters()
     };
+
 
     this.currentParams.set(searchParams);
 
