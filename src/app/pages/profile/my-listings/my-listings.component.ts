@@ -7,6 +7,7 @@ import { ListingsService } from '../../../services/listings/listings.service';
 import { FormsModule } from '@angular/forms';
 import { ToasterService } from '../../../services/toaster/toaster.service';
 import { ConfirmationService } from '../../../shared/services/delete-confirmation.service';
+import { User } from '../../../models/User.model';
 
 interface LocationCoordinates {
   lat: number;
@@ -40,13 +41,14 @@ export interface Listing {
   agreeToTerms: boolean;
   images: string[];
   // Additional fields for listing management
-  status: 'active' | 'inactive' | 'rented';
+  status: 'ACTIVE' | 'INACTIVE' | 'RENTED';
   views: number;
   favorites: number;
   createdAt: string;
   updatedAt: string;
   availability: boolean;
   rentedUntil?: string;
+  user:User
 }
 
 @Component({
@@ -126,9 +128,9 @@ export class MyListingsComponent implements OnInit, OnDestroy {
 
   updateStats() {
     this.stats.total = this.listings.length;
-    this.stats.active = this.listings.filter(l => l.status === 'active').length;
-    this.stats.rented = this.listings.filter(l => l.status === 'rented').length;
-    this.stats.inactive = this.listings.filter(l => l.status === 'inactive').length;
+    this.stats.active = this.listings.filter(l => l.status === 'ACTIVE').length;
+    this.stats.rented = this.listings.filter(l => l.status === 'RENTED').length;
+    this.stats.inactive = this.listings.filter(l => l.status === 'INACTIVE').length;
   }
 
   filterListings() {
@@ -169,7 +171,7 @@ export class MyListingsComponent implements OnInit, OnDestroy {
   toggleListingStatus(listingId: string) {
     const listing = this.listings.find(l => l.id === listingId);
     if (listing) {
-      listing.status = listing.status === 'active' ? 'inactive' : 'active';
+      listing.status = listing.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
       this.updateStats();
       this.filterListings();
     }

@@ -355,28 +355,28 @@ export class NavbarComponent implements OnInit, OnDestroy {
     console.log('Profile clicked');
     this.isUserDropdownOpen.set(false);
     this.closeMobileMenu();
-    this.router.navigate(['/user/profile']);
+    this.router.navigate(['/profile']);
   }
 
   onMyRentals(): void {
     console.log('My rentals clicked');
     this.isUserDropdownOpen.set(false);
     this.closeMobileMenu();
-    this.router.navigate(['/my-rentals']);
+    this.router.navigate(['/profile/rentals']);
   }
 
   onMyListings(): void {
     console.log('My listings clicked');
     this.isUserDropdownOpen.set(false);
     this.closeMobileMenu();
-    this.router.navigate(['/my-listings']);
+    this.router.navigate(['/profile/listings']);
   }
 
   onSettings(): void {
     console.log('Settings clicked');
     this.isUserDropdownOpen.set(false);
     this.closeMobileMenu();
-    this.router.navigate(['/settings']);
+    this.router.navigate(['/profile/settings']);
   }
 
   onLogout(): void {

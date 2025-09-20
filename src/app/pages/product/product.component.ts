@@ -47,7 +47,7 @@ interface Listing {
   deliveryOptions: DeliveryOptions;
   agreeToTerms: boolean;
   images: string[];
-  status: 'active' | 'inactive' | 'rented';
+  status: 'ACTIVE' | 'INACTIVE' | 'RENTED';
   views: number;
   favorites: number;
   createdAt: string;
@@ -401,7 +401,7 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
     //   return;
     // }
 
-    if (this.listing?.status !== 'active') {
+    if (this.listing?.status !== 'ACTIVE') {
       this.toaster.show('This item is not available for booking', 'warning');
       return;
     }

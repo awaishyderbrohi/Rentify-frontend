@@ -2,8 +2,8 @@ import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { Router, ActivatedRoute } from '@angular/router';
-import { Subject, takeUntil, interval, Subscription } from 'rxjs';
+import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
+import { Subject, takeUntil, interval, Subscription, filter } from 'rxjs';
 import { AuthService } from '../../services/auth/auth.service';
 import { User } from '../../models/User.model';
 import { UsersService } from '../../services/users/users.service';
@@ -12,19 +12,18 @@ import { MyListingsComponent } from "./my-listings/my-listings.component";
 import { MessagesComponent } from "./messages/messages.component";
 import { EarningsComponent } from "./earnings/earnings.component";
 
-
 @Component({
   selector: 'app-user-profile',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MyListingsComponent, MessagesComponent, EarningsComponent],
-  templateUrl: `./profile.component.html`
+  templateUrl: './profile.component.html'
 })
 export class ProfileComponent implements OnInit, OnDestroy {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   user: User | null = null;
   profileForm: FormGroup;
-  activeSection = 'profile';
+  activeSection = 'overview'; // Default section
   isEditMode = false;
   isLoading = false;
   successMessage = '';
@@ -40,7 +39,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   menuItems = [
-    { id: 'profile', label: 'Profile', icon: 'user' },
+    { id: 'overview', label: 'Profile', icon: 'user' },
     { id: 'listings', label: 'My Listings', icon: 'package' },
     { id: 'rentals', label: 'My Rentals', icon: 'calendar' },
     { id: 'favorites', label: 'Favorites', icon: 'heart' },
@@ -56,7 +55,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private router: Router,
     private route: ActivatedRoute,
-    private toaster:ToasterService
+    private toaster: ToasterService
   ) {
     this.profileForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(2)]],
@@ -71,11 +70,18 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    // Subscribe to route changes to update active section
-    this.route.url.pipe(takeUntil(this.destroy$)).subscribe(segments => {
-      const section = segments.length > 0 ? segments[0].path : 'profile';
-      this.activeSection = this.isValidSection(section) ? section : 'profile';
-    });
+    // Subscribe to router events to get current route
+    this.router.events
+      .pipe(
+        filter(event => event instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.updateActiveSectionFromRoute();
+      });
+
+    // Also check initial route
+    this.updateActiveSectionFromRoute();
 
     // Subscribe to user data
     this.getUserData();
@@ -91,8 +97,27 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.stopCountdown();
   }
 
-  getUserData(){
-        this.authService.user$
+  private updateActiveSectionFromRoute() {
+    // Get the last segment of the current route
+    const urlSegments = this.router.url.split('/');
+    const lastSegment = urlSegments[urlSegments.length - 1];
+
+    // Handle query parameters and fragments
+    const section = lastSegment.split('?')[0].split('#')[0];
+
+    // Validate if it's a valid section
+    if (this.isValidSection(section)) {
+      this.activeSection = section;
+    } else {
+      // If invalid or empty, default to overview
+      this.activeSection = 'overview';
+    }
+
+    this.clearMessages();
+  }
+
+  getUserData() {
+    this.authService.user$
       .pipe(takeUntil(this.destroy$))
       .subscribe(user => {
         this.user = user;
@@ -107,13 +132,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   navigateToSection(section: string) {
-    this.router.navigate([section], { relativeTo: this.route });
-    this.clearMessages();
+    if (this.isValidSection(section)) {
+      this.router.navigate(['/profile', section]);
+      this.clearMessages();
+    }
   }
 
   setActiveSection(section: string) {
-    this.activeSection = section;
-    this.clearMessages();
+    // Navigate to the section instead of just setting the activeSection
+    this.navigateToSection(section);
   }
 
   isValidSection(section: string): boolean {
@@ -134,7 +161,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   toggleEditMode() {
     this.isEditMode = !this.isEditMode;
-    this.activeSection = "settings"
+    // Navigate to settings instead of just setting activeSection
+    this.navigateToSection('settings');
     this.clearMessages();
 
     if (this.isEditMode && this.user) {
@@ -173,7 +201,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.isUploading = false;
         this.successMessage = 'Profile image updated successfully!';
         setTimeout(() => {
-        window.location.reload();   // Refresh page
+          window.location.reload();   // Refresh page
         }, 1000);
       },
       error: () => {
@@ -192,7 +220,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.authService.sendVerificationEmail().subscribe({
       next: () => {
         this.successMessage = 'Verification email sent! Please check your inbox.';
-        this.toaster.show("Verification email sent! Please check your inbox",'info')
+        this.toaster.show("Verification email sent! Please check your inbox", 'info')
         this.startCountdown();
         setTimeout(() => this.clearMessages(), 3000);
       },
@@ -256,7 +284,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
           this.authService.loadUser(); // Refresh user in AuthService
           this.isLoading = false;
           this.successMessage = 'Profile updated successfully!';
-          setTimeout(() => this.clearMessages(), 3000);
+          setTimeout(() => this.clearMessages(), 15000);
         },
         error: (error) => {
           this.isLoading = false;

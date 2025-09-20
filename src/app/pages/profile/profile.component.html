@@ -30,8 +30,8 @@
 
       <!-- Main Content -->
       <div class="flex-1">
-        <!-- Profile Section -->
-        <div *ngIf="activeSection === 'profile'" class="space-y-8">
+        <!-- Profile Section (renamed from 'profile' to 'overview') -->
+        <div *ngIf="activeSection === 'overview'" class="space-y-8">
           <!-- Profile Header -->
           <div class="border border-gray-200 rounded-xl p-8">
             <div class="flex items-start space-x-8">
@@ -394,20 +394,23 @@
           </div>
         </div>
 
-         <div *ngIf="activeSection === 'listings'" class="space-y-8">
-           <app-my-listings></app-my-listings>
-         </div>
+        <!-- Listings Section -->
+        <div *ngIf="activeSection === 'listings'" class="space-y-8">
+          <app-my-listings></app-my-listings>
+        </div>
 
-         <div *ngIf="activeSection === 'messages'" class="space-y-8">
-            <app-messages></app-messages>
-         </div>
+        <!-- Messages Section -->
+        <div *ngIf="activeSection === 'messages'" class="space-y-8">
+          <app-messages></app-messages>
+        </div>
 
-         <div *ngIf="activeSection === 'earnings'" class="space-y-8">
-           <app-earnings></app-earnings>
-         </div>
+        <!-- Earnings Section -->
+        <div *ngIf="activeSection === 'earnings'" class="space-y-8">
+          <app-earnings></app-earnings>
+        </div>
 
         <!-- Other sections placeholder -->
-        <div *ngIf="!['profile', 'settings','listings','messages','earnings'].includes(activeSection)" class="border border-gray-200 rounded-xl p-12">
+        <div *ngIf="!['overview', 'settings','listings','messages','earnings'].includes(activeSection)" class="border border-gray-200 rounded-xl p-12">
           <div class="text-center text-gray-500">
             <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>

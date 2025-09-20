@@ -112,7 +112,7 @@
 
           <div class="flex items-baseline space-x-2 mb-4">
             <span class="text-3xl font-bold text-blue-600">
-              ${{ listing.price }}
+              Rs{{ listing.price }}
             </span>
             <span class="text-gray-500 capitalize">/ {{ listing.priceType }}</span>
           </div>
@@ -125,13 +125,13 @@
 
           <!-- Action Buttons -->
           <div class="space-y-3">
-            <button *ngIf="listing.status === 'active'"
+            <button *ngIf="listing.status === 'ACTIVE'"
                     (click)="openBookingForm()"
                     class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors">
               Book Now
             </button>
 
-            <button *ngIf="listing.status !== 'active'"
+            <button *ngIf="listing.status !== 'ACTIVE'"
                     disabled
                     class="w-full bg-gray-300 text-gray-500 font-semibold py-3 px-4 rounded-lg cursor-not-allowed">
               Not Available
@@ -431,7 +431,7 @@
           <div class="p-4">
             <h3 class="font-semibold text-gray-900 line-clamp-2 mb-2">{{ product.title }}</h3>
             <div class="flex items-baseline space-x-1 mb-2">
-              <span class="text-lg font-bold text-blue-600">${{ product.price }}</span>
+              <span class="text-lg font-bold text-blue-600">Rs{{ product.price }}</span>
               <span class="text-sm text-gray-500 capitalize">/ {{ product.priceType }}</span>
             </div>
             <p class="text-sm text-gray-600">{{ product.area }}, {{ product.city }}</p>
@@ -520,7 +520,7 @@
           <div *ngIf="bookingRequest.totalAmount > 0" class="bg-gray-50 p-4 rounded-lg">
             <div class="flex justify-between items-center text-lg font-semibold">
               <span>Total Amount:</span>
-              <span class="text-blue-600">${{ bookingRequest.totalAmount }}</span>
+              <span class="text-blue-600">Rs{{ bookingRequest.totalAmount }}</span>
             </div>
           </div>
 

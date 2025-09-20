@@ -7,7 +7,6 @@ import { RegisterComponent } from './pages/register/register.component';
 import { AuthGuardService } from './services/auth/auth-guard.service';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { ForgetComponent } from './pages/forget/forget.component';
-import { ProductListingFormComponent } from './pages/list-equipment/list-equipment.component';
 import { ProductPageComponent } from './pages/product/product.component';
 import { SearchResultsComponent } from './pages/search-result/search-result.component';
 
@@ -25,9 +24,19 @@ export const routes: Routes = [
      .then(m=> m.ProductListingFormComponent)
     },
   {
-    path:'user/profile',
+    path:'profile',
     canActivate:[AuthGuardService],
-    component:ProfileComponent
+    component:ProfileComponent,
+    children: [
+      { path: '', redirectTo: 'overview', pathMatch: 'full' }, // Default to overview
+      { path: 'overview', component: ProfileComponent },
+      { path: 'settings', component: ProfileComponent },
+      { path: 'listings', component: ProfileComponent },
+      { path: 'rentals', component: ProfileComponent },
+      { path: 'favorites', component: ProfileComponent },
+      { path: 'messages', component: ProfileComponent },
+      { path: 'earnings', component: ProfileComponent },
+    ]
   },
    {path:"search",component:SearchResultsComponent},
   { path:'products/:id',component:ProductPageComponent},

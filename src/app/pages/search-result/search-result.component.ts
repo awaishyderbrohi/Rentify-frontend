@@ -5,6 +5,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 import { ListingsService } from '../../services/listings/listings.service';
 import { ToasterService } from '../../services/toaster/toaster.service';
+import { User } from '../../models/User.model';
+import { Listing } from '../profile/my-listings/my-listings.component';
 
 interface LocationCoordinates {
   lat: number;
@@ -29,32 +31,6 @@ interface UserProfile {
   specialization?: string;
 }
 
-interface Listing {
-  id: string;
-  title: string;
-  category: string;
-  description: string;
-  price: number;
-  priceType: string;
-  address: string;
-  city: string;
-  area: string;
-  coordinates?: LocationCoordinates;
-  phone: string;
-  email: string[];
-  deliveryOptions: DeliveryOptions;
-  agreeToTerms: boolean;
-  images: string[];
-  status: 'active' | 'inactive' | 'rented';
-  views: number;
-  favorites: number;
-  createdAt: string;
-  updatedAt: string;
-  availability: boolean;
-  rentedUntil?: string;
-  distance?: number;
-  user: UserProfile;
-}
 
 interface FilterOptions {
   category: string[];
@@ -197,15 +173,9 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
       console.log(this.locationQuery);
       console.log("longitude", this.longitude);
       console.log("current page", this.currentPage);
-      this.listingService.search(this.searchQuery,this.locationQuery,this.latitude,this.longitude,this.currentPage()).subscribe({
-        next:(res)=>{
-          console.log("search result: ", res.content);
-        },
-        error:(err)=>{
-          console.log(err.message);
-        }
-      });
-    });
+
+    }
+  );
 
     // Load view mode preference
     const savedViewMode = localStorage.getItem('viewMode') as 'grid' | 'list';
@@ -234,134 +204,140 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
     };
 
 
+
     this.currentParams.set(searchParams);
 
-    // Simulate API call - replace with actual service call
-    setTimeout(() => {
-      this.searchResults.set(this.generateMockResults());
-      this.totalItems.set(247); // Mock total
-      this.isLoading.set(false);
-    }, 800);
+     this.listingService.search(this.searchQuery,this.locationQuery,this.latitude,this.longitude,this.currentPage()).subscribe({
+        next:(res)=>{
+          console.log("search result: ", res.t.content);
+          this.searchResults.set(res.t.content);
+          this.totalItems.set(247); // Mock total
+          this.isLoading.set(false);
+        },
+        error:(err)=>{
+          console.log(err.message);
+        }
+      });
 
     // Update URL
     this.updateUrl();
   }
 
-  private generateMockResults(): Listing[] {
-    // Mock data generation with user profiles
-    const mockUsers: UserProfile[] = [
-      {
-        id: '1',
-        name: 'Ahmed Khan',
-        profilePicUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
-        isVerified: true,
-        isBusiness: false,
-        rating: 4.9,
-        totalReviews: 23,
-        specialization: 'Tech Enthusiast'
-      },
-      {
-        id: '2',
-        name: 'Sarah Ahmed',
-        profilePicUrl: 'https://images.unsplash.com/photo-1494790108755-2616b612b830?w=40&h=40&fit=crop&crop=face',
-        isVerified: true,
-        isBusiness: true,
-        rating: 4.7,
-        totalReviews: 156,
-        specialization: 'Furniture Store'
-      },
-      {
-        id: '3',
-        name: 'Ali Hassan',
-        profilePicUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face',
-        isVerified: true,
-        isBusiness: false,
-        rating: 5.0,
-        totalReviews: 87,
-        specialization: 'Pro Photographer'
-      }
-    ];
+  // private generateMockResults(): Listing[] {
+  //   // Mock data generation with user profiles
+  //   const mockUsers: UserProfile[] = [
+  //     {
+  //       id: '1',
+  //       name: 'Ahmed Khan',
+  //       profilePicUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
+  //       isVerified: true,
+  //       isBusiness: false,
+  //       rating: 4.9,
+  //       totalReviews: 23,
+  //       specialization: 'Tech Enthusiast'
+  //     },
+  //     {
+  //       id: '2',
+  //       name: 'Sarah Ahmed',
+  //       profilePicUrl: 'https://images.unsplash.com/photo-1494790108755-2616b612b830?w=40&h=40&fit=crop&crop=face',
+  //       isVerified: true,
+  //       isBusiness: true,
+  //       rating: 4.7,
+  //       totalReviews: 156,
+  //       specialization: 'Furniture Store'
+  //     },
+  //     {
+  //       id: '3',
+  //       name: 'Ali Hassan',
+  //       profilePicUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face',
+  //       isVerified: true,
+  //       isBusiness: false,
+  //       rating: 5.0,
+  //       totalReviews: 87,
+  //       specialization: 'Pro Photographer'
+  //     }
+  //   ];
 
-    const mockListings: Listing[] = [
-      {
-        id: '1',
-        title: 'MacBook Pro 13" M2 Chip - Like New Condition',
-        category: 'electronics',
-        description: 'Barely used MacBook Pro with M2 chip. Perfect for work and creative projects. Comes with original charger and box.',
-        price: 85,
-        priceType: 'daily',
-        address: '123 Tech Street',
-        city: 'Karachi',
-        area: 'Clifton',
-        coordinates: { lat: 24.8607, lng: 67.0011 },
-        phone: '+92-300-1234567',
-        email: ['owner@example.com'],
-        deliveryOptions: { pickup: true, delivery: true, deliveryRadius: 15, deliveryFee: 50 },
-        agreeToTerms: true,
-        images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500'],
-        status: 'active',
-        views: 145,
-        favorites: 32,
-        createdAt: '2024-01-15T10:00:00Z',
-        updatedAt: '2024-01-15T10:00:00Z',
-        availability: true,
-        distance: 2.5,
-        user: mockUsers[0]
-      },
-      {
-        id: '2',
-        title: 'Ergonomic Office Chair - Premium Quality',
-        category: 'furniture',
-        description: 'Professional ergonomic office chair with lumbar support. Great for long working hours.',
-        price: 25,
-        priceType: 'daily',
-        address: '456 Office Avenue',
-        city: 'Karachi',
-        area: 'DHA',
-        coordinates: { lat: 24.8615, lng: 67.0099 },
-        phone: '+92-300-2345678',
-        email: ['furniture@example.com'],
-        deliveryOptions: { pickup: true, delivery: false },
-        agreeToTerms: true,
-        images: ['https://images.unsplash.com/photo-1541558869434-2840d308329a?w=500'],
-        status: 'active',
-        views: 89,
-        favorites: 18,
-        createdAt: '2024-01-14T14:30:00Z',
-        updatedAt: '2024-01-14T14:30:00Z',
-        availability: true,
-        distance: 5.2,
-        user: mockUsers[1]
-      },
-      {
-        id: '3',
-        title: 'Canon EOS R6 Professional Camera',
-        category: 'electronics',
-        description: 'Brand new Canon EOS R6 with kit lens. Perfect for photography enthusiasts and professionals.',
-        price: 120,
-        priceType: 'daily',
-        address: '789 Camera Road',
-        city: 'Karachi',
-        area: 'Gulshan',
-        coordinates: { lat: 24.8607, lng: 67.0011 },
-        phone: '+92-300-3456789',
-        email: ['camera@example.com'],
-        deliveryOptions: { pickup: true, delivery: true, deliveryRadius: 25, deliveryFee: 75 },
-        agreeToTerms: true,
-        images: ['https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=500'],
-        status: 'active',
-        views: 234,
-        favorites: 67,
-        createdAt: '2024-01-13T09:15:00Z',
-        updatedAt: '2024-01-13T09:15:00Z',
-        availability: true,
-        distance: 8.7,
-        user: mockUsers[2]
-      }
-    ];
+  //   const mockListings: Listing[] = [
+  //     {
+  //       id: '1',
+  //       title: 'MacBook Pro 13" M2 Chip - Like New Condition',
+  //       category: 'electronics',
+  //       description: 'Barely used MacBook Pro with M2 chip. Perfect for work and creative projects. Comes with original charger and box.',
+  //       price: 85,
+  //       priceType: 'daily',
+  //       address: '123 Tech Street',
+  //       city: 'Karachi',
+  //       area: 'Clifton',
+  //       coordinates: { lat: 24.8607, lng: 67.0011 },
+  //       phone: '+92-300-1234567',
+  //       email: ['owner@example.com'],
+  //       deliveryOptions: { pickup: true, delivery: true, deliveryRadius: 15, deliveryFee: 50 },
+  //       agreeToTerms: true,
+  //       images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500'],
+  //       status: 'active',
+  //       views: 145,
+  //       favorites: 32,
+  //       createdAt: '2024-01-15T10:00:00Z',
+  //       updatedAt: '2024-01-15T10:00:00Z',
+  //       availability: true,
+  //       distance: 2.5,
+  //       user: mockUsers[0]
+  //     },
+  //     {
+  //       id: '2',
+  //       title: 'Ergonomic Office Chair - Premium Quality',
+  //       category: 'furniture',
+  //       description: 'Professional ergonomic office chair with lumbar support. Great for long working hours.',
+  //       price: 25,
+  //       priceType: 'daily',
+  //       address: '456 Office Avenue',
+  //       city: 'Karachi',
+  //       area: 'DHA',
+  //       coordinates: { lat: 24.8615, lng: 67.0099 },
+  //       phone: '+92-300-2345678',
+  //       email: ['furniture@example.com'],
+  //       deliveryOptions: { pickup: true, delivery: false },
+  //       agreeToTerms: true,
+  //       images: ['https://images.unsplash.com/photo-1541558869434-2840d308329a?w=500'],
+  //       status: 'active',
+  //       views: 89,
+  //       favorites: 18,
+  //       createdAt: '2024-01-14T14:30:00Z',
+  //       updatedAt: '2024-01-14T14:30:00Z',
+  //       availability: true,
+  //       distance: 5.2,
+  //       user: mockUsers[1]
+  //     },
+  //     {
+  //       id: '3',
+  //       title: 'Canon EOS R6 Professional Camera',
+  //       category: 'electronics',
+  //       description: 'Brand new Canon EOS R6 with kit lens. Perfect for photography enthusiasts and professionals.',
+  //       price: 120,
+  //       priceType: 'daily',
+  //       address: '789 Camera Road',
+  //       city: 'Karachi',
+  //       area: 'Gulshan',
+  //       coordinates: { lat: 24.8607, lng: 67.0011 },
+  //       phone: '+92-300-3456789',
+  //       email: ['camera@example.com'],
+  //       deliveryOptions: { pickup: true, delivery: true, deliveryRadius: 25, deliveryFee: 75 },
+  //       agreeToTerms: true,
+  //       images: ['https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=500'],
+  //       status: 'active',
+  //       views: 234,
+  //       favorites: 67,
+  //       createdAt: '2024-01-13T09:15:00Z',
+  //       updatedAt: '2024-01-13T09:15:00Z',
+  //       availability: true,
+  //       distance: 8.7,
+  //       user: mockUsers[2]
+  //     }
+  //   ];
 
-    return mockListings;
-  }
+  //   return mockListings;
+  // }
 
   // Filter and sort methods
   toggleFilter(type: keyof FilterOptions, value: string) {
@@ -464,7 +440,7 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
   }
 
   navigateToProduct(id: string) {
-    this.router.navigate(['/product', id]);
+    this.router.navigate(['/products', id]);
   }
 
   // Utility methods
@@ -507,17 +483,12 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
     return classes[status as keyof typeof classes] || 'bg-gray-100 text-gray-700';
   }
 
-  getUserBadgeText(user: UserProfile): string {
-    if (user.isBusiness) {
-      return `Business seller • ${user.rating} rating`;
+  getUserBadgeText(user: User): string {
+
+    if (user.nICVerified) {
+      return `Verified • ${user.ratingCount} rating`;
     }
-    if (user.isVerified) {
-      return `Verified • ${user.rating} rating`;
-    }
-    if (user.specialization) {
-      return `${user.specialization} • ${user.rating} rating`;
-    }
-    return `${user.rating} rating`;
+    return `${user.ratingCount} rating`;
   }
 
   private updateUrl() {

@@ -79,7 +79,7 @@ export class ProductListingFormComponent implements OnInit, AfterViewInit, OnDes
   private map: any;
   private marker: any;
   private mapInitializationAttempted = false;
-  private  user: User | null = null;
+    user: User = {};
 
   // Signals
   currentStep = signal(1);
@@ -529,6 +529,11 @@ export class ProductListingFormComponent implements OnInit, AfterViewInit, OnDes
     return labels[fieldName] || fieldName;
   }
 
+  dismissed = false;
+
+  dismiss() {
+    this.dismissed = true;
+  }
   // Image handling
   onFileSelect(event: Event): void {
     const input = event.target as HTMLInputElement;

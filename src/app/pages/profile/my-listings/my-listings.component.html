@@ -219,7 +219,7 @@
                     class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     (click)="toggleListingStatus(listing.id)"
                   >
-                    {{ listing.status === 'active' ? 'Deactivate' : 'Activate' }}
+                    {{ listing.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE' }}
                   </button>
                   <button
                     class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
@@ -286,7 +286,7 @@
             </div>
 
             <!-- Rented Until (if applicable) -->
-            <div *ngIf="listing.status === 'rented' && listing.rentedUntil"
+            <div *ngIf="listing.status === 'RENTED' && listing.rentedUntil"
                  class="text-sm text-orange-600 bg-orange-50 px-3 py-2 rounded-lg">
               Rented until {{ formatDate(listing.rentedUntil) }}
             </div>
@@ -366,7 +366,7 @@
                         class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                         (click)="toggleListingStatus(listing.id)"
                       >
-                        {{ listing.status === 'active' ? 'Deactivate' : 'Activate' }}
+                        {{ listing.status === 'ACTIVE' ? 'Deactivate' : 'Activate' }}
                       </button>
                       <button
                         class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
@@ -410,7 +410,7 @@
                   <span>Updated {{ formatDate(listing.updatedAt) }}</span>
                 </div>
 
-                <div *ngIf="listing.status === 'rented' && listing.rentedUntil"
+                <div *ngIf="listing.status === 'RENTED' && listing.rentedUntil"
                      class="text-sm text-orange-600">
                   Rented until {{ formatDate(listing.rentedUntil) }}
                 </div>
