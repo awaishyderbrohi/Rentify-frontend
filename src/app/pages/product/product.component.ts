@@ -7,6 +7,8 @@ import { ListingsService } from '../../services/listings/listings.service';
 import { AuthService } from '../../services/auth/auth.service';
 import { ToasterService } from '../../services/toaster/toaster.service';
 import { User } from '../../models/User.model';
+import { Listing } from '../profile/my-listings/my-listings.component';
+import { ReportModalComponent } from './report-modal/report-modal.component';
 
 // Declare Google Maps types
 declare global {
@@ -28,35 +30,6 @@ interface DeliveryOptions {
   deliveryFee?: number;
 }
 
-interface Listing {
-  id: string;
-  title: string;
-  category: string;
-  condition: string;
-  description: string;
-  price: number;
-  priceType: string;
-  brand: string;
-  model: string;
-  address: string;
-  city: string;
-  area: string;
-  coordinates?: LocationCoordinates;
-  phone: string;
-  email: string[];
-  deliveryOptions: DeliveryOptions;
-  agreeToTerms: boolean;
-  images: string[];
-  status: 'ACTIVE' | 'INACTIVE' | 'RENTED';
-  views: number;
-  favorites: number;
-  createdAt: string;
-  updatedAt: string;
-  availability: boolean;
-  rentedUntil?: string;
-  // Additional seller info
-  user?:User;
-}
 
 interface BookingRequest {
   startDate: string;
@@ -88,7 +61,7 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
   showContactInfo = false;
   isFavorited = false;
   isMapLoaded = false;
-
+  getRentalCost= 0;
   // Google Maps related properties
   private map: google.maps.Map | undefined;
   private marker: google.maps.Marker | null = null;
@@ -395,11 +368,12 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   openBookingForm() {
-    // if (!this.authService.isAuthenticated()) {
-    //   this.toaster.show('Please login to book this item', 'warning');
-    //   this.router.navigate(['/login']);
-    //   return;
-    // }
+    if (!this.authService.isLoggedIn()) {
+      this.toaster.show('Please login to book this item', 'warning');
+      this.router.navigate(['/login']);
+      return;
+    }
+
 
     if (this.listing?.status !== 'ACTIVE') {
       this.toaster.show('This item is not available for booking', 'warning');
@@ -501,13 +475,14 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   reportListing() {
-    // if (!this.authService.isAuthenticated()) {
-    //   this.toaster.show('Please login to report this listing', 'warning');
-    //   return;
-    // }
+    if (!this.authService.isLoggedIn()) {
+      this.toaster.show('Please login to report this listing', 'warning');
+      return;
+    }
 
     // Simulate report submission
     const reason = prompt('Please provide a reason for reporting this listing:');
+    ReportModalComponent;
     if (reason) {
       setTimeout(() => {
         this.toaster.show('Report submitted successfully. Thank you for helping keep our platform safe.', 'success');
@@ -564,4 +539,7 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
     startDate.setDate(startDate.getDate() + 1);
     return startDate.toISOString().split('T')[0];
   }
+
+  getRentalDuration(){}
+
 }

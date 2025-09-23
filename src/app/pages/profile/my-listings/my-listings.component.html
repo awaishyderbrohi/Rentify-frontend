@@ -85,16 +85,17 @@
             </div>
 
             <!-- Status Filter -->
-            <select
-              [(ngModel)]="statusFilter"
-              (change)="filterListings()"
-              class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="rented">Rented</option>
-              <option value="inactive">Inactive</option>
-            </select>
+           <!-- Status Filter -->
+          <select
+  [(ngModel)]="statusFilter"
+  (change)="filterListings()"
+  class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+>
+  <option value="">All Status</option>
+  <option value="ACTIVE">Active</option>
+  <option value="RENTED">Rented</option>
+  <option value="INACTIVE">Inactive</option>
+          </select>
 
             <!-- Category Filter -->
             <select
@@ -209,12 +210,7 @@
                   >
                     Edit
                   </button>
-                  <button
-                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    (click)="duplicateListing(listing.id)"
-                  >
-                    Duplicate
-                  </button>
+
                   <button
                     class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     (click)="toggleListingStatus(listing.id)"
@@ -356,12 +352,7 @@
                       >
                         Edit
                       </button>
-                      <button
-                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                        (click)="duplicateListing(listing.id)"
-                      >
-                        Duplicate
-                      </button>
+
                       <button
                         class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                         (click)="toggleListingStatus(listing.id)"

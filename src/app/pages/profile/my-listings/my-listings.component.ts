@@ -22,6 +22,8 @@ interface DeliveryOptions {
 }
 
 export interface Listing {
+  relevanceScore: number;
+  distance: number;
   id: string;
   title: string;
   category: string;
@@ -41,13 +43,16 @@ export interface Listing {
   agreeToTerms: boolean;
   images: string[];
   // Additional fields for listing management
-  status: 'ACTIVE' | 'INACTIVE' | 'RENTED';
+  status: 'ACTIVE' | 'RENTED' | 'INACTIVE';
   views: number;
   favorites: number;
   createdAt: string;
   updatedAt: string;
   availability: boolean;
   rentedUntil?: string;
+  rating?:number;
+  reviewCount?:number;
+  tags:string[];
   user:User
 }
 
@@ -112,26 +117,31 @@ export class MyListingsComponent implements OnInit, OnDestroy {
   }
 
   loadListings() {
-    this.isLoading = true;
+  this.isLoading = true;
+
+  this.listingsService.getAllUserListings().subscribe({
+    next: (res) => {
+      // Make sure you're accessing the correct property from response
+      this.listings = res.t || res.t || res; // Adjust based on your API response structure
+      this.filteredListings = [...this.listings];
+      this.updateStats();
+      this.isLoading = false;
+    },
+    error: (error) => {
+      console.error('Error loading listings:', error);
+      this.isLoading = false;
+      this.toaster.show('Error loading listings', 'error');
+    }
+  });
+}
 
 
-      this.listingsService.getAllUserListings().subscribe({
-        next:(res)=>{
-          this.listings = res.t
-          this.filteredListings = [...this.listings];
-          this.updateStats();
-          this.isLoading = false;
-        },
-
-      })
-  }
-
-  updateStats() {
-    this.stats.total = this.listings.length;
-    this.stats.active = this.listings.filter(l => l.status === 'ACTIVE').length;
-    this.stats.rented = this.listings.filter(l => l.status === 'RENTED').length;
-    this.stats.inactive = this.listings.filter(l => l.status === 'INACTIVE').length;
-  }
+updateStats() {
+  this.stats.total = this.listings.length;
+  this.stats.active = this.listings.filter(l => l.status === 'ACTIVE').length;
+  this.stats.rented = this.listings.filter(l => l.status === 'RENTED').length;
+  this.stats.inactive = this.listings.filter(l => l.status === 'INACTIVE').length;
+}
 
   filterListings() {
     this.filteredListings = this.listings.filter(listing => {
@@ -162,11 +172,7 @@ export class MyListingsComponent implements OnInit, OnDestroy {
     this.openDropdown = null;
   }
 
-  duplicateListing(listingId: string) {
-    // Duplicate listing logic
-    console.log('Duplicate listing:', listingId);
-    this.openDropdown = null;
-  }
+
 
   toggleListingStatus(listingId: string) {
     const listing = this.listings.find(l => l.id === listingId);
@@ -201,21 +207,21 @@ export class MyListingsComponent implements OnInit, OnDestroy {
 
   getStatusBadgeClass(status: string): string {
     const classes = {
-      'active': 'bg-green-100 text-green-800',
-      'rented': 'bg-yellow-100 text-yellow-800',
-      'inactive': 'bg-gray-100 text-gray-800'
+      'ACTIVE': 'bg-green-100 text-green-800',
+      'RENTED': 'bg-yellow-100 text-yellow-800',
+      'INACTIVE': 'bg-gray-100 text-gray-800'
     };
-    return classes[status as keyof typeof classes] || classes['inactive'];
+    return classes[status as keyof typeof classes] || classes['INACTIVE'];
   }
 
-  getStatusText(status: string): string {
-    const texts = {
-      'active': 'Active',
-      'rented': 'Rented',
-      'inactive': 'Inactive'
-    };
-    return texts[status as keyof typeof texts] || 'Unknown';
-  }
+ getStatusText(status: string): string {
+  const texts = {
+    'ACTIVE': 'ACTIVE',
+    'RENTED': 'RENTED',
+    'INACTIVE': 'INACTIVE'
+  };
+  return texts[status as keyof typeof texts] || 'Unknown';
+}
 
   formatDate(dateString: string): string {
     const date = new Date(dateString);

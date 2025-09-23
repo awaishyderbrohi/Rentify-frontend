@@ -39,30 +39,36 @@ export class ListingsService {
 }
 
 
-getAllUserListings(): Observable<BaseResponse<Listing[]>>{
-  return this.http.get<BaseResponse<Listing[]>>(`${this.BASE_URL}/user-listings`,{withCredentials:true});
-}
+  getAllUserListings(): Observable<BaseResponse<Listing[]>>{
+    return this.http.get<BaseResponse<Listing[]>>(`${this.BASE_URL}/user-listings`,{withCredentials:true});
+  }
 
-deleteListingById(id:string){
-  return this.http.delete(`${this.BASE_URL}/delete-by-id/${id}`,{withCredentials:true});
-}
+  deleteListingById(id:string){
+    return this.http.delete(`${this.BASE_URL}/delete-by-id/${id}`,{withCredentials:true});
+  }
 
-getListingById(id:string):Observable<BaseResponse<Listing>>{
-  return this.http.get<BaseResponse<Listing>>(`${this.BASE_URL}/${id}`, {withCredentials:true});
-}
+  getListingById(id:string):Observable<BaseResponse<Listing>>{
+      return this.http.get<BaseResponse<Listing>>(`${this.BASE_URL}/${id}`, {withCredentials:true});
+  }
 
-search(q:string,location:string,lat:number,lon:number,page:number): Observable<BaseResponse<BasePageRes<Listing>>>{
- if(page != 0 ){
-  page = page-1
- }
-let params = new HttpParams();
-params = params.set('query', q);
-params = params.set('latitude', lat.toString());
-params = params.set('longitude', lon.toString());
-params = params.set('page', page.toString());
+  search(q:string,location:string,lat:number,lon:number,page:number): Observable<BaseResponse<BasePageRes<Listing>>>{
+      if(page != 0 ){
+        page = page-1
+      }
+      let params = new HttpParams();
+      params = params.set('query', q);
+      params = params.set('latitude', lat.toString());
+      params = params.set('longitude', lon.toString());
+      params = params.set('page', page.toString());
 
   return this.http.get<BaseResponse<BasePageRes<Listing>>>(`${this.BASE_URL}/search`,{params,  withCredentials:true});
 
-}
+  }
+
+  getRandomItems(count:number): Observable<BaseResponse<Listing[]>>{
+    let params = new HttpParams();
+    params = params.set("count",count)
+    return this.http.get<BaseResponse<Listing[]>>(`${this.BASE_URL}/random`,{params});
+  }
 
 }

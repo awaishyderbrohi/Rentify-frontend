@@ -100,7 +100,7 @@ export class LoginComponent implements OnInit {
 
     this.authService.login(this.loginForm.value).subscribe({
         next:()=>{
-          this.router.navigate(['user/profile'])
+          this.router.navigate(['/profile/overview'])
         },
         error:(error)=>{
           this.handleLoginError("Invalid Credentials"),

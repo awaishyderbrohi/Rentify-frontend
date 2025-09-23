@@ -1,3 +1,5 @@
+import { Address } from "./Address.model";
+
 export type User = {
   id?: string; // UUID as string
   firstName?: string;
@@ -18,4 +20,11 @@ export type User = {
   totalReviews?:number;
   responseRate?:number;
   location?:Location;
+  gender?:string;
+  address?:Address;
+  dateOfBirth?:Date,
+  website?:string,
+  company?:string,
+  profession?:string,
+
 }

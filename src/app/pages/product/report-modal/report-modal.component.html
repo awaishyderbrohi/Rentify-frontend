@@ -1,0 +1,298 @@
+<!-- Report Modal -->
+<div *ngIf="showReportModal" class="modal modal-open">
+  <div class="modal-box w-11/12 max-w-lg">
+    <!-- Modal Header -->
+    <div class="flex justify-between items-center mb-6">
+      <div class="flex items-center space-x-3">
+        <div class="p-2 bg-warning/10 rounded-lg">
+          <svg class="h-6 w-6 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-bold text-lg text-base-content">Report Listing</h3>
+          <p class="text-sm text-base-content/70">Help us keep the platform safe</p>
+        </div>
+      </div>
+      <button (click)="closeReportModal()" class="btn btn-sm btn-circle btn-ghost">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <form (ngSubmit)="submitReport()" class="space-y-6">
+      <!-- Report Reason -->
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text font-medium">What's the issue?</span>
+          <span class="label-text-alt text-error">*Required</span>
+        </label>
+        <div class="space-y-3">
+          <!-- Fraud/Scam -->
+          <label class="label cursor-pointer justify-start bg-base-200/50 p-3 rounded-lg hover:bg-base-200 transition-colors">
+            <input type="radio"
+                   [(ngModel)]="reportData.reason"
+                   name="reason"
+                   value="fraud"
+                   class="radio radio-error mr-3"
+                   required>
+            <div class="flex-1">
+              <div class="flex items-center space-x-2 mb-1">
+                <svg class="h-4 w-4 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <span class="font-medium text-base-content">Fraud or Scam</span>
+              </div>
+              <p class="text-sm text-base-content/70">This listing appears to be fraudulent or a scam</p>
+            </div>
+          </label>
+
+          <!-- Inappropriate Content -->
+          <label class="label cursor-pointer justify-start bg-base-200/50 p-3 rounded-lg hover:bg-base-200 transition-colors">
+            <input type="radio"
+                   [(ngModel)]="reportData.reason"
+                   name="reason"
+                   value="inappropriate"
+                   class="radio radio-error mr-3">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2 mb-1">
+                <svg class="h-4 w-4 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                </svg>
+                <span class="font-medium text-base-content">Inappropriate Content</span>
+              </div>
+              <p class="text-sm text-base-content/70">Contains offensive, inappropriate, or harmful content</p>
+            </div>
+          </label>
+
+          <!-- Misleading Information -->
+          <label class="label cursor-pointer justify-start bg-base-200/50 p-3 rounded-lg hover:bg-base-200 transition-colors">
+            <input type="radio"
+                   [(ngModel)]="reportData.reason"
+                   name="reason"
+                   value="misleading"
+                   class="radio radio-error mr-3">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2 mb-1">
+                <svg class="h-4 w-4 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="font-medium text-base-content">Misleading Information</span>
+              </div>
+              <p class="text-sm text-base-content/70">False or misleading description, price, or details</p>
+            </div>
+          </label>
+
+          <!-- Prohibited Item -->
+          <label class="label cursor-pointer justify-start bg-base-200/50 p-3 rounded-lg hover:bg-base-200 transition-colors">
+            <input type="radio"
+                   [(ngModel)]="reportData.reason"
+                   name="reason"
+                   value="prohibited"
+                   class="radio radio-error mr-3">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2 mb-1">
+                <svg class="h-4 w-4 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-12.728 12.728m0-12.728l12.728 12.728" />
+                </svg>
+                <span class="font-medium text-base-content">Prohibited Item</span>
+              </div>
+              <p class="text-sm text-base-content/70">Item is not allowed on our platform</p>
+            </div>
+          </label>
+
+          <!-- Copyright Violation -->
+          <label class="label cursor-pointer justify-start bg-base-200/50 p-3 rounded-lg hover:bg-base-200 transition-colors">
+            <input type="radio"
+                   [(ngModel)]="reportData.reason"
+                   name="reason"
+                   value="copyright"
+                   class="radio radio-error mr-3">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2 mb-1">
+                <svg class="h-4 w-4 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span class="font-medium text-base-content">Copyright Violation</span>
+              </div>
+              <p class="text-sm text-base-content/70">Uses copyrighted images or content without permission</p>
+            </div>
+          </label>
+
+          <!-- Duplicate Listing -->
+          <label class="label cursor-pointer justify-start bg-base-200/50 p-3 rounded-lg hover:bg-base-200 transition-colors">
+            <input type="radio"
+                   [(ngModel)]="reportData.reason"
+                   name="reason"
+                   value="duplicate"
+                   class="radio radio-error mr-3">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2 mb-1">
+                <svg class="h-4 w-4 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <span class="font-medium text-base-content">Duplicate Listing</span>
+              </div>
+              <p class="text-sm text-base-content/70">This item has already been listed by the same user</p>
+            </div>
+          </label>
+
+          <!-- Other -->
+          <label class="label cursor-pointer justify-start bg-base-200/50 p-3 rounded-lg hover:bg-base-200 transition-colors">
+            <input type="radio"
+                   [(ngModel)]="reportData.reason"
+                   name="reason"
+                   value="other"
+                   class="radio radio-error mr-3">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2 mb-1">
+                <svg class="h-4 w-4 text-base-content" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="font-medium text-base-content">Other</span>
+              </div>
+              <p class="text-sm text-base-content/70">Something else not listed above</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Additional Details -->
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text font-medium">Additional Details</span>
+          <span class="label-text-alt text-base-content/70">Optional</span>
+        </label>
+        <textarea [(ngModel)]="reportData.details"
+                  name="details"
+                  class="textarea textarea-bordered h-24 resize-none"
+                  placeholder="Please provide any additional information that would help us understand the issue..."></textarea>
+        <label class="label">
+          <span class="label-text-alt text-base-content/70">{{ reportData.details?.length || 0 }}/500 characters</span>
+        </label>
+      </div>
+
+      <!-- Reporter Contact (Optional) -->
+      <div class="form-control" *ngIf="reportData.reason === 'copyright'">
+        <label class="label">
+          <span class="label-text font-medium">Your Email (for copyright claims)</span>
+          <span class="label-text-alt text-base-content/70">Required for DMCA claims</span>
+        </label>
+        <input type="email"
+               [(ngModel)]="reportData.contactEmail"
+               name="contactEmail"
+               class="input input-bordered"
+               placeholder="your.email@example.com"
+               [required]="reportData.reason === 'copyright'">
+      </div>
+
+      <!-- Priority Selection -->
+      <div class="form-control" *ngIf="reportData.reason === 'fraud' || reportData.reason === 'inappropriate'">
+        <label class="label">
+          <span class="label-text font-medium">Priority Level</span>
+        </label>
+        <select [(ngModel)]="reportData.priority"
+                name="priority"
+                class="select select-bordered">
+          <option value="low">Low - Minor issue</option>
+          <option value="medium">Medium - Concerning issue</option>
+          <option value="high">High - Urgent issue</option>
+        </select>
+      </div>
+
+      <!-- Legal Notice -->
+      <div class="alert alert-info">
+        <svg class="stroke-current shrink-0 w-6 h-6" fill="none" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div class="text-sm">
+          <p class="font-medium mb-1">Please note:</p>
+          <ul class="list-disc list-inside space-y-1 text-xs">
+            <li>False reports may result in account restrictions</li>
+            <li>We investigate all reports within 24-48 hours</li>
+            <li>Your report will be kept confidential</li>
+            <li>You may be contacted for additional information</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Listing Info Display -->
+      <div class="card bg-base-300/50 border border-base-300">
+        <div class="card-body p-4">
+          <h4 class="font-medium text-sm text-base-content/70 mb-2">Reporting this listing:</h4>
+          <div class="flex items-center space-x-3">
+            <div class="avatar">
+              <div class="w-12 h-12 rounded-lg bg-base-200">
+                <img *ngIf="listing?.images?.length > 0"
+                     [src]="listing.images[0]"
+                     [alt]="listing?.title"
+                     class="w-full h-full object-cover rounded-lg">
+                <div *ngIf="!listing?.images?.length"
+                     class="w-full h-full flex items-center justify-center text-base-content/50">
+                  <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-medium text-base-content truncate">{{ listing?.title }}</p>
+              <p class="text-sm text-base-content/70">{{ listing?.area }}, {{ listing?.city }}</p>
+              <p class="text-sm font-medium text-neutral">Rs{{ listing?.price }}/{{ listing?.priceType }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="modal-action">
+        <button type="button"
+                (click)="closeReportModal()"
+                class="btn btn-ghost">
+          Cancel
+        </button>
+        <button type="submit"
+                class="btn btn-error"
+                [disabled]="!reportData.reason || isSubmitting">
+          <span *ngIf="isSubmitting" class="loading loading-spinner loading-sm mr-2"></span>
+          {{ isSubmitting ? 'Submitting...' : 'Submit Report' }}
+        </button>
+      </div>
+    </form>
+  </div>
+  <div class="modal-backdrop" (click)="closeReportModal()"></div>
+</div>
+
+<!-- Success Modal -->
+<div *ngIf="showSuccessModal" class="modal modal-open">
+  <div class="modal-box max-w-md text-center">
+    <div class="mb-6">
+      <div class="mx-auto w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mb-4">
+        <svg class="h-8 w-8 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <h3 class="font-bold text-lg text-base-content mb-2">Report Submitted</h3>
+      <p class="text-base-content/70">Thank you for helping keep our platform safe. We'll review your report and take appropriate action.</p>
+    </div>
+
+    <div class="bg-base-200 rounded-lg p-4 mb-6">
+      <div class="flex items-center justify-between text-sm">
+        <span class="text-base-content/70">Report ID:</span>
+        <span class="font-mono font-medium text-base-content">#{{ reportId }}</span>
+      </div>
+      <div class="flex items-center justify-between text-sm mt-2">
+        <span class="text-base-content/70">Status:</span>
+        <span class="badge badge-warning badge-sm">Under Review</span>
+      </div>
+    </div>
+
+    <div class="modal-action justify-center">
+      <button (click)="closeSuccessModal()" class="btn btn-neutral">
+        Done
+      </button>
+    </div>
+  </div>
+  <div class="modal-backdrop" (click)="closeSuccessModal()"></div>
+</div>

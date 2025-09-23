@@ -5,7 +5,7 @@ import { ListingsService } from '../../services/listings/listings.service';
 import { ToasterService } from '../../services/toaster/toaster.service';
 import { User } from '../../models/User.model';
 import { AuthService } from '../../services/auth/auth.service';
-import { takeUntil } from 'rxjs';
+import { last, takeUntil } from 'rxjs';
 import { Users } from 'lucide-angular';
 
 // Interfaces
@@ -97,14 +97,15 @@ export class ProductListingFormComponent implements OnInit, AfterViewInit, OnDes
 
   // Data
   categories: Category[] = [
-    { value: 'electronics', label: 'Electronics' },
-    { value: 'vehicles', label: 'Vehicles' },
-    { value: 'property', label: 'Property' },
-    { value: 'fashion', label: 'Fashion & Beauty' },
-    { value: 'home-garden', label: 'Home & Garden' },
-    { value: 'sports', label: 'Sports & Outdoor' },
+    { value: 'printers', label:"Printers & Scanners"},
+    { value: 'photography', label: 'Photograpy & Video' },
+    {value: 'vechiles',label:"Cars & Bikes"},
+    { value: 'tools', label: 'Tools & Equipments' },
+    { value: 'audio', label: 'Audio & Music' },
+    { value: 'computing', label: 'Computing & Tech' },
     { value: 'books', label: 'Books & Education' },
-    { value: 'services', label: 'Services' },
+    { value: 'home', label: 'Home & Garden' },
+    { value: 'sports', label: 'Sports' },
     { value: 'other', label: 'Other' }
   ];
 

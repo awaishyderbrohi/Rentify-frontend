@@ -31,7 +31,6 @@ interface UserProfile {
   specialization?: string;
 }
 
-
 interface FilterOptions {
   category: string[];
   priceRange: { min: number; max: number };
@@ -70,7 +69,7 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
   private toaster = inject(ToasterService);
 
   // Signals for reactive state management
-  searchResults = signal<Listing[]>([]);
+  private allResults = signal<Listing[]>([]); // Store all results from API
   isLoading = signal(false);
   currentPage = signal(1);
   totalItems = signal(0);
@@ -128,8 +127,44 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
     { key: 'views', label: 'Most Popular', direction: 'desc' }
   ];
 
-  // Computed properties
-  totalPages = computed(() => Math.ceil(this.totalItems() / this.itemsPerPage));
+  // Computed properties for filtered and sorted results
+  searchResults = computed(() => {
+    let results = [...this.allResults()];
+    const filters = this.selectedFilters();
+
+    // Apply category filter
+    if (filters.category.length > 0) {
+      results = results.filter(listing =>
+        filters.category.includes(listing.category?.toLowerCase() || '')
+      );
+    }
+
+    // Apply price range filter
+    if (filters.priceRange.min > 0 || filters.priceRange.max < 10000) {
+      results = results.filter(listing =>
+        listing.price >= filters.priceRange.min &&
+        listing.price <= filters.priceRange.max
+      );
+    }
+
+    // Apply delivery options filter
+    if (filters.deliveryOptions.length > 0) {
+      results = results.filter(listing => {
+        const hasPickup = filters.deliveryOptions.includes('pickup') &&
+                          listing.deliveryOptions?.pickup;
+        const hasDelivery = filters.deliveryOptions.includes('delivery') &&
+                           listing.deliveryOptions?.delivery;
+        return hasPickup || hasDelivery;
+      });
+    }
+
+    // Apply sorting
+    results = this.applySorting(results, this.currentSort);
+
+    return results;
+  });
+
+  totalPages = computed(() => Math.ceil(this.searchResults().length / this.itemsPerPage));
 
   foundPriceRange = computed(() => {
     const results = this.searchResults();
@@ -147,7 +182,7 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
     return results.slice(startIndex, startIndex + this.itemsPerPage);
   });
 
-  constructor(private listingService:ListingsService){}
+  constructor(private listingService: ListingsService) {}
   private destroy$ = new Subject<void>();
 
   ngOnInit() {
@@ -166,16 +201,33 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
         }));
       }
 
+      // Update price range and radius from params if available
+      if (params['minPrice'] || params['maxPrice']) {
+        const min = parseInt(params['minPrice']) || 0;
+        const max = parseInt(params['maxPrice']) || 10000;
+        this.priceRange = { min, max };
+        this.selectedFilters.update(f => ({
+          ...f,
+          priceRange: { min, max }
+        }));
+      }
+
+      if (params['radius']) {
+        this.selectedRadius = parseInt(params['radius']) || 0;
+        this.selectedFilters.update(f => ({
+          ...f,
+          radius: this.selectedRadius
+        }));
+      }
+
       this.performSearch();
 
-      console.log(this.searchQuery)
+      console.log(this.searchQuery);
       console.log(this.latitude);
       console.log(this.locationQuery);
       console.log("longitude", this.longitude);
-      console.log("current page", this.currentPage);
-
-    }
-  );
+      console.log("current page", this.currentPage());
+    });
 
     // Load view mode preference
     const savedViewMode = localStorage.getItem('viewMode') as 'grid' | 'list';
@@ -189,10 +241,8 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-
   performSearch() {
     this.isLoading.set(true);
-
 
     const searchParams: SearchParams = {
       query: this.searchQuery,
@@ -203,141 +253,47 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
       filters: this.selectedFilters()
     };
 
-
-
     this.currentParams.set(searchParams);
 
-     this.listingService.search(this.searchQuery,this.locationQuery,this.latitude,this.longitude,this.currentPage()).subscribe({
-        next:(res)=>{
-          console.log("search result: ", res.t.content);
-          this.searchResults.set(res.t.content);
-          this.totalItems.set(247); // Mock total
-          this.isLoading.set(false);
-        },
-        error:(err)=>{
-          console.log(err.message);
-        }
-      });
+    this.listingService.search(this.searchQuery, this.locationQuery, this.latitude, this.longitude, this.currentPage()).subscribe({
+      next: (res) => {
+        console.log("search result: ", res.t.content);
+        this.allResults.set(res.t.content); // Store all results
+        this.totalItems.set(res.t.totalElements); // Keep original total from backend
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.log(err.message);
+        this.isLoading.set(false);
+      }
+    });
 
     // Update URL
     this.updateUrl();
   }
 
-  // private generateMockResults(): Listing[] {
-  //   // Mock data generation with user profiles
-  //   const mockUsers: UserProfile[] = [
-  //     {
-  //       id: '1',
-  //       name: 'Ahmed Khan',
-  //       profilePicUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
-  //       isVerified: true,
-  //       isBusiness: false,
-  //       rating: 4.9,
-  //       totalReviews: 23,
-  //       specialization: 'Tech Enthusiast'
-  //     },
-  //     {
-  //       id: '2',
-  //       name: 'Sarah Ahmed',
-  //       profilePicUrl: 'https://images.unsplash.com/photo-1494790108755-2616b612b830?w=40&h=40&fit=crop&crop=face',
-  //       isVerified: true,
-  //       isBusiness: true,
-  //       rating: 4.7,
-  //       totalReviews: 156,
-  //       specialization: 'Furniture Store'
-  //     },
-  //     {
-  //       id: '3',
-  //       name: 'Ali Hassan',
-  //       profilePicUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face',
-  //       isVerified: true,
-  //       isBusiness: false,
-  //       rating: 5.0,
-  //       totalReviews: 87,
-  //       specialization: 'Pro Photographer'
-  //     }
-  //   ];
+  private applySorting(results: Listing[], sortKey: string): Listing[] {
+    const [key, direction] = sortKey.split('_');
 
-  //   const mockListings: Listing[] = [
-  //     {
-  //       id: '1',
-  //       title: 'MacBook Pro 13" M2 Chip - Like New Condition',
-  //       category: 'electronics',
-  //       description: 'Barely used MacBook Pro with M2 chip. Perfect for work and creative projects. Comes with original charger and box.',
-  //       price: 85,
-  //       priceType: 'daily',
-  //       address: '123 Tech Street',
-  //       city: 'Karachi',
-  //       area: 'Clifton',
-  //       coordinates: { lat: 24.8607, lng: 67.0011 },
-  //       phone: '+92-300-1234567',
-  //       email: ['owner@example.com'],
-  //       deliveryOptions: { pickup: true, delivery: true, deliveryRadius: 15, deliveryFee: 50 },
-  //       agreeToTerms: true,
-  //       images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500'],
-  //       status: 'active',
-  //       views: 145,
-  //       favorites: 32,
-  //       createdAt: '2024-01-15T10:00:00Z',
-  //       updatedAt: '2024-01-15T10:00:00Z',
-  //       availability: true,
-  //       distance: 2.5,
-  //       user: mockUsers[0]
-  //     },
-  //     {
-  //       id: '2',
-  //       title: 'Ergonomic Office Chair - Premium Quality',
-  //       category: 'furniture',
-  //       description: 'Professional ergonomic office chair with lumbar support. Great for long working hours.',
-  //       price: 25,
-  //       priceType: 'daily',
-  //       address: '456 Office Avenue',
-  //       city: 'Karachi',
-  //       area: 'DHA',
-  //       coordinates: { lat: 24.8615, lng: 67.0099 },
-  //       phone: '+92-300-2345678',
-  //       email: ['furniture@example.com'],
-  //       deliveryOptions: { pickup: true, delivery: false },
-  //       agreeToTerms: true,
-  //       images: ['https://images.unsplash.com/photo-1541558869434-2840d308329a?w=500'],
-  //       status: 'active',
-  //       views: 89,
-  //       favorites: 18,
-  //       createdAt: '2024-01-14T14:30:00Z',
-  //       updatedAt: '2024-01-14T14:30:00Z',
-  //       availability: true,
-  //       distance: 5.2,
-  //       user: mockUsers[1]
-  //     },
-  //     {
-  //       id: '3',
-  //       title: 'Canon EOS R6 Professional Camera',
-  //       category: 'electronics',
-  //       description: 'Brand new Canon EOS R6 with kit lens. Perfect for photography enthusiasts and professionals.',
-  //       price: 120,
-  //       priceType: 'daily',
-  //       address: '789 Camera Road',
-  //       city: 'Karachi',
-  //       area: 'Gulshan',
-  //       coordinates: { lat: 24.8607, lng: 67.0011 },
-  //       phone: '+92-300-3456789',
-  //       email: ['camera@example.com'],
-  //       deliveryOptions: { pickup: true, delivery: true, deliveryRadius: 25, deliveryFee: 75 },
-  //       agreeToTerms: true,
-  //       images: ['https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=500'],
-  //       status: 'active',
-  //       views: 234,
-  //       favorites: 67,
-  //       createdAt: '2024-01-13T09:15:00Z',
-  //       updatedAt: '2024-01-13T09:15:00Z',
-  //       availability: true,
-  //       distance: 8.7,
-  //       user: mockUsers[2]
-  //     }
-  //   ];
+    return results.sort((a, b) => {
+      let comparison = 0;
 
-  //   return mockListings;
-  // }
+      switch (key) {
+        case 'price':
+          comparison = a.price - b.price;
+          break;
+        case 'created':
+          comparison = new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+          break;
+        case 'views':
+          comparison = (a.views || 0) - (b.views || 0);
+          break;
+
+      }
+
+      return direction === 'desc' ? -comparison : comparison;
+    });
+  }
 
   // Filter and sort methods
   toggleFilter(type: keyof FilterOptions, value: string) {
@@ -349,7 +305,9 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
 
       return { ...filters, [type]: newValues };
     });
-    this.performSearch();
+
+    // Reset to first page when applying filters
+    this.currentPage.set(1);
   }
 
   toggleQuickFilter(type: keyof FilterOptions, value: string) {
@@ -362,7 +320,8 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
       const newValues = currentValues.filter(v => v !== value);
       return { ...filters, [type]: newValues };
     });
-    this.performSearch();
+
+    this.currentPage.set(1);
   }
 
   clearAllFilters() {
@@ -375,7 +334,7 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
     });
     this.priceRange = { min: 0, max: 10000 };
     this.selectedRadius = 0;
-    this.performSearch();
+    this.currentPage.set(1);
   }
 
   // Event handlers
@@ -388,7 +347,8 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
   }
 
   onSortChange() {
-    this.performSearch();
+    this.currentPage.set(1);
+    // No need for performSearch() - computed property handles sorting
   }
 
   onPriceRangeChange() {
@@ -396,7 +356,7 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
       ...f,
       priceRange: { ...this.priceRange }
     }));
-    this.performSearch();
+    this.currentPage.set(1);
   }
 
   onRadiusChange() {
@@ -404,7 +364,8 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
       ...f,
       radius: this.selectedRadius
     }));
-    this.performSearch();
+
+    this.currentPage.set(1);
   }
 
   // View and navigation methods
@@ -415,7 +376,7 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
 
   goToPage(page: number) {
     this.currentPage.set(page);
-    this.performSearch();
+    // No need to call performSearch() - pagination works on filtered results
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -449,7 +410,8 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
     return filters.category.length > 0 ||
            filters.deliveryOptions.length > 0 ||
            filters.priceRange.min > 0 ||
-           filters.priceRange.max < 10000;
+           filters.priceRange.max < 10000 ||
+           filters.radius > 0;
   }
 
   getActiveFilters() {
@@ -471,6 +433,22 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
       });
     });
 
+    if (filters.priceRange.min > 0 || filters.priceRange.max < 10000) {
+      active.push({
+        type: 'priceRange',
+        value: 'price',
+        label: `$${filters.priceRange.min} - $${filters.priceRange.max}`
+      });
+    }
+
+    if (filters.radius > 0) {
+      active.push({
+        type: 'radius',
+        value: 'radius',
+        label: `Within ${filters.radius}km`
+      });
+    }
+
     return active;
   }
 
@@ -484,7 +462,6 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
   }
 
   getUserBadgeText(user: User): string {
-
     if (user.nICVerified) {
       return `Verified • ${user.ratingCount} rating`;
     }
@@ -499,7 +476,20 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
     if (this.currentPage() > 1) queryParams.page = this.currentPage();
 
     const filters = this.selectedFilters();
-    if (filters.category.length === 1) queryParams.category = filters.category[0];
+
+    if (filters.category.length === 1) {
+      queryParams.category = filters.category[0];
+    } else if (filters.category.length > 1) {
+      queryParams.categories = filters.category.join(',');
+    }
+
+    if (filters.priceRange.min > 0) queryParams.minPrice = filters.priceRange.min;
+    if (filters.priceRange.max < 10000) queryParams.maxPrice = filters.priceRange.max;
+    if (filters.radius > 0) queryParams.radius = filters.radius;
+
+    if (filters.deliveryOptions.length > 0) {
+      queryParams.delivery = filters.deliveryOptions.join(',');
+    }
 
     this.router.navigate([], {
       relativeTo: this.route,

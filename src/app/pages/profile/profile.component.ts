@@ -1,48 +1,106 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
-import { Subject, takeUntil, interval, Subscription, filter } from 'rxjs';
+import { Subject, takeUntil, filter } from 'rxjs';
 import { AuthService } from '../../services/auth/auth.service';
 import { User } from '../../models/User.model';
-import { UsersService } from '../../services/users/users.service';
-import { ToasterService } from '../../services/toaster/toaster.service';
-import { MyListingsComponent } from "./my-listings/my-listings.component";
+
+import { Listing, MyListingsComponent } from "./my-listings/my-listings.component";
 import { MessagesComponent } from "./messages/messages.component";
 import { EarningsComponent } from "./earnings/earnings.component";
+import { ProfileOverviewComponent } from './overview/overview.component';
+import { ProfileSettingsComponent } from './settings/settings.component';
+import { ListingsService } from '../../services/listings/listings.service';
 
 @Component({
   selector: 'app-user-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MyListingsComponent, MessagesComponent, EarningsComponent],
-  templateUrl: './profile.component.html'
+  imports: [CommonModule,ProfileOverviewComponent,ProfileSettingsComponent,MyListingsComponent,MessagesComponent,EarningsComponent],
+  template: `
+    <div class="min-h-screen">
+      <div class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">Account Settings</h1>
+          <p class="text-gray-600">Manage your profile information and preferences</p>
+        </div>
+
+        <div class="flex gap-8">
+          <!-- Sidebar Navigation -->
+          <div class="w-72 flex-shrink-0">
+            <div class="border border-gray-200 rounded-xl p-2">
+              <nav class="space-y-1">
+                <button
+                  *ngFor="let item of menuItems"
+                  (click)="setActiveSection(item.id)"
+                  class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 text-sm font-medium"
+                  [class]="activeSection === item.id
+                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path [innerHTML]="getIconSvg(item.icon)"></path>
+                  </svg>
+                  <span>{{ item.label }}</span>
+                </button>
+              </nav>
+            </div>
+          </div>
+
+          <!-- Main Content -->
+          <div class="flex-1">
+            <!-- Profile Overview Section -->
+            <div *ngIf="activeSection === 'overview'">
+              <app-profile-overview [user]="user"></app-profile-overview>
+            </div>
+
+            <!-- Settings Section -->
+            <div *ngIf="activeSection === 'settings'">
+              <app-profile-settings [user]="user"></app-profile-settings>
+            </div>
+
+            <!-- Listings Section -->
+            <div *ngIf="activeSection === 'listings'" class="space-y-8">
+              <app-my-listings></app-my-listings>
+            </div>
+
+            <!-- Messages Section -->
+            <div *ngIf="activeSection === 'messages'" class="space-y-8">
+              <app-messages></app-messages>
+            </div>
+
+            <!-- Earnings Section -->
+            <div *ngIf="activeSection === 'earnings'" class="space-y-8">
+              <app-earnings></app-earnings>
+            </div>
+
+            <!-- Other sections placeholder -->
+            <div *ngIf="!['overview', 'settings','listings','messages','earnings'].includes(activeSection)" class="border border-gray-200 rounded-xl p-12">
+              <div class="text-center text-gray-500">
+                <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">{{ activeSection.charAt(0).toUpperCase() + activeSection.slice(1) }}</h3>
+                <p class="text-gray-600">This section is coming soon...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
 })
 export class ProfileComponent implements OnInit, OnDestroy {
-  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
-
   user: User | null = null;
-  profileForm: FormGroup;
   activeSection = 'overview'; // Default section
-  isEditMode = false;
-  isLoading = false;
-  successMessage = '';
-  errorMessage = '';
-  imageError = '';
-  isUploading = false;
-
-  // Email verification timer properties
-  isVerificationEmailSent = false;
-  verificationCountdown = 0;
-  private countdownSubscription: Subscription | null = null;
 
   private destroy$ = new Subject<void>();
+  listings:Listing[]=[];
 
   menuItems = [
     { id: 'overview', label: 'Profile', icon: 'user' },
     { id: 'listings', label: 'My Listings', icon: 'package' },
     { id: 'rentals', label: 'My Rentals', icon: 'calendar' },
-    { id: 'favorites', label: 'Favorites', icon: 'heart' },
     { id: 'messages', label: 'Messages', icon: 'message' },
     { id: 'earnings', label: 'Earnings', icon: 'dollar' },
     { id: 'settings', label: 'Settings', icon: 'settings' }
@@ -50,23 +108,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   constructor(
     private authService: AuthService,
-    private userService: UsersService,
-    private fb: FormBuilder,
-    private http: HttpClient,
+    private listingsService:ListingsService,
     private router: Router,
-    private route: ActivatedRoute,
-    private toaster: ToasterService
-  ) {
-    this.profileForm = this.fb.group({
-      firstName: ['', [Validators.required, Validators.minLength(2)]],
-      lastName: ['', [Validators.required, Validators.minLength(2)]],
-      email: ['', [Validators.required, Validators.email]],
-      phone: [''],
-      bio: [''],
-      avatar: [''],
-      location: [''],
-      website: ['']
-    });
+    private route: ActivatedRoute
+  ) {}
+
+  // Listen for custom navigation event from child components
+  @HostListener('window:navigate-to-settings', ['$event'])
+  onNavigateToSettings() {
+    this.navigateToSection('settings');
   }
 
   ngOnInit() {
@@ -83,6 +133,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     // Also check initial route
     this.updateActiveSectionFromRoute();
 
+
     // Subscribe to user data
     this.getUserData();
 
@@ -94,7 +145,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
-    this.stopCountdown();
   }
 
   private updateActiveSectionFromRoute() {
@@ -112,8 +162,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
       // If invalid or empty, default to overview
       this.activeSection = 'overview';
     }
-
-    this.clearMessages();
   }
 
   getUserData() {
@@ -121,20 +169,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(user => {
         this.user = user;
-        if (user) {
-          this.populateForm(user);
-          // Reset verification email state if user becomes verified
-          if (user.emailVerified) {
-            this.resetVerificationState();
-          }
-        }
       });
   }
 
   navigateToSection(section: string) {
     if (this.isValidSection(section)) {
       this.router.navigate(['/profile', section]);
-      this.clearMessages();
     }
   }
 
@@ -145,175 +185,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   isValidSection(section: string): boolean {
     return this.menuItems.some(item => item.id === section);
-  }
-
-  populateForm(user: User) {
-    this.profileForm.patchValue({
-      firstName: user.firstName || '',
-      lastName: user.lastName || '',
-      email: user.email || '',
-      phone: user.phoneNumber || '',
-      bio: user.bio || '',
-      avatar: user.profilePicUrl || '',
-      location: user.location || '',
-    });
-  }
-
-  toggleEditMode() {
-    this.isEditMode = !this.isEditMode;
-    // Navigate to settings instead of just setting activeSection
-    this.navigateToSection('settings');
-    this.clearMessages();
-
-    if (this.isEditMode && this.user) {
-      this.populateForm(this.user);
-    }
-  }
-
-  handleImageClick() {
-    this.fileInput.nativeElement.click();
-  }
-
-  handleImageChange(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      this.imageError = 'Please select a valid image file (JPEG, PNG, GIF, or WebP)';
-      return;
-    }
-
-    // Validate file size (5MB limit)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      this.imageError = 'Image size must be less than 5MB';
-      return;
-    }
-
-    this.imageError = '';
-    this.isUploading = true;
-
-    // Here you would implement your image upload logic
-    this.userService.uploadProfileImage(file).subscribe({
-      next: () => {
-        this.isUploading = false;
-        this.successMessage = 'Profile image updated successfully!';
-        setTimeout(() => {
-          window.location.reload();   // Refresh page
-        }, 1000);
-      },
-      error: () => {
-        this.isUploading = false;
-        this.errorMessage = 'Failed to upload image. Please try again.';
-      }
-    });
-  }
-
-  handleVerificationEmail() {
-    if (this.isVerificationEmailSent && this.verificationCountdown > 0) {
-      return; // Don't send if countdown is active
-    }
-
-    // Send verification email API call
-    this.authService.sendVerificationEmail().subscribe({
-      next: () => {
-        this.successMessage = 'Verification email sent! Please check your inbox.';
-        this.toaster.show("Verification email sent! Please check your inbox", 'info')
-        this.startCountdown();
-        setTimeout(() => this.clearMessages(), 3000);
-      },
-      error: (error) => {
-        this.errorMessage = error.error?.message || 'Failed to send verification email. Please try again.';
-        setTimeout(() => this.clearMessages(), 5000);
-      }
-    });
-  }
-
-  private startCountdown() {
-    this.isVerificationEmailSent = true;
-    this.verificationCountdown = 60; // 1 minute = 60 seconds
-
-    this.countdownSubscription = interval(1000).subscribe(() => {
-      this.verificationCountdown--;
-
-      if (this.verificationCountdown <= 0) {
-        this.resetVerificationState();
-      }
-    });
-  }
-
-  private stopCountdown() {
-    if (this.countdownSubscription) {
-      this.countdownSubscription.unsubscribe();
-      this.countdownSubscription = null;
-    }
-  }
-
-  private resetVerificationState() {
-    this.stopCountdown();
-    this.isVerificationEmailSent = false;
-    this.verificationCountdown = 0;
-  }
-
-  getCountdownText(): string {
-    const minutes = Math.floor(this.verificationCountdown / 60);
-    const seconds = this.verificationCountdown % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  }
-
-  logout() {
-    // Implement logout logic here
-    this.authService.logout();
-  }
-
-  onSubmit() {
-    if (this.profileForm.valid) {
-      this.isLoading = true;
-      this.clearMessages();
-
-      const formData = this.profileForm.value;
-
-      // Update profile via API
-      this.http.put(`${this.authService.BASE_URL}/users/profile`, formData, {
-        withCredentials: true
-      }).subscribe({
-        next: (updatedUser: any) => {
-          this.user = updatedUser;
-          this.authService.loadUser(); // Refresh user in AuthService
-          this.isLoading = false;
-          this.successMessage = 'Profile updated successfully!';
-          setTimeout(() => this.clearMessages(), 15000);
-        },
-        error: (error) => {
-          this.isLoading = false;
-          this.errorMessage = error.error?.message || 'Failed to update profile. Please try again.';
-          setTimeout(() => this.clearMessages(), 5000);
-        }
-      });
-    }
-  }
-
-  getInitials(): string {
-    if (!this.user) return 'U';
-    const firstName = this.user.firstName || '';
-    const lastName = this.user.lastName || '';
-    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
-  }
-
-  formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  }
-
-  clearMessages() {
-    this.successMessage = '';
-    this.errorMessage = '';
-    this.imageError = '';
   }
 
   getIconSvg(iconName: string): string {
