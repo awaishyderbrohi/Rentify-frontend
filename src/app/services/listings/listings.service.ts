@@ -94,6 +94,10 @@ export class ListingsService {
     return this.http.get<BaseResponse<Listing[]>>(`${this.BASE_URL}/${lisitngId}/related`);
   }
 
+   getAllUserListingsById(id:string): Observable<BaseResponse<Listing[]>>{
+    return this.http.get<BaseResponse<Listing[]>>(`${this.BASE_URL}/users/${id}`);
+   }
+
 
 
 }

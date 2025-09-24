@@ -360,7 +360,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
       queryParams.lng = parseFloat(selectedLoc.lon);
     }
 
-    this.router.navigate(['/products/category', category.id], { queryParams });
+    this.router.navigate(['/products/category', category.id]);
   }
 
   onLogin(): void {

@@ -1,0 +1,215 @@
+<div *ngIf="loading" class="flex justify-center items-center min-h-screen">
+      <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+    </div>
+
+    <div *ngIf="error" class="max-w-md mx-auto mt-8 p-4 sm:p-6 bg-red-50 border border-red-200 rounded-lg">
+      <div class="flex items-center">
+        <svg class="w-6 h-6 text-red-500 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+        </svg>
+        <div class="flex-1">
+          <h3 class="text-red-800 font-medium text-sm sm:text-base">{{ error }}</h3>
+          <button
+            (click)="retry()"
+            class="text-red-600 hover:text-red-700 text-sm font-medium mt-1">
+            Try again
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!loading && !error && user" class="space-y-4 sm:space-y-6 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Profile Header -->
+      <div class="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row items-start space-y-6 sm:space-y-0 sm:space-x-8 lg:space-x-12">
+          <!-- Avatar Section -->
+          <div class="flex-shrink-0 mx-auto sm:mx-0">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 p-0.5">
+              <div class="w-full h-full rounded-full border-2 border-white relative overflow-hidden">
+                <img
+                  *ngIf="user?.profilePicUrl; else initials"
+                  [src]="user?.profilePicUrl"
+                  [alt]="user?.firstName + ' ' + user?.lastName"
+                  class="w-full h-full object-cover"
+                />
+                <ng-template #initials>
+                  <div class="w-full h-full bg-gray-100 flex items-center justify-center text-base sm:text-lg lg:text-xl font-bold text-gray-600">
+                    {{ getInitials() }}
+                  </div>
+                </ng-template>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex-1 text-center sm:text-left w-full sm:w-auto">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3 space-y-2 sm:space-y-0">
+              <div class="flex-1">
+                <h2 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1">{{ user?.firstName }} {{ user?.lastName }}</h2>
+                <p class="text-xs sm:text-sm text-gray-600 break-all sm:break-normal">{{ getPublicEmail() }}</p>
+              </div>
+              <div class="tooltip tooltip-bottom flex justify-center sm:justify-end space-x-2 mt-2 sm:mt-0 flex-shrink-0">
+                <button
+                  class="tooltip tooltip-bottom inline-flex items-center px-2 sm:px-3 py-1.5 border border-blue-300 rounded-md text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors"
+                  (click)="onContactUser()"
+                  data-tip="Discus Listing With User">
+                  <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                  </svg>
+                  <span class="hidden xs:inline">Contact</span>
+                </button>
+               <button
+                class="tooltip tooltip-bottom inline-flex items-center px-2 sm:px-3 py-1.5 border border-gray-300 rounded-md text-s font-medium text-gray-900 bg-white hover:bg-gray-50 transition-colors"
+                data-tip="Report this user"
+              (click)="onReportUser()">
+
+              <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01"></path>
+              </svg>
+              <span class="hidden xs:inline">Report</span>
+            </button>
+
+              </div>
+            </div>
+
+            <!-- Badges and Info -->
+            <div class="flex flex-wrap justify-center sm:justify-start items-center gap-2 sm:gap-3 mb-3 text-xs">
+              <div *ngIf="user?.createdAt" class="flex items-center space-x-1 text-gray-600">
+                <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <span class="whitespace-nowrap">{{ user.createdAt }}</span>
+              </div>
+              <div *ngIf="user?.nICVerified" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 whitespace-nowrap">
+                <svg class="w-3 h-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>
+                </svg>
+                Verified
+              </div>
+              <div *ngIf="isOnline" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 whitespace-nowrap">
+                <div class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1 animate-pulse flex-shrink-0"></div>
+                Online
+              </div>
+            </div>
+
+            <!-- Rating and Stats -->
+            <div class="flex flex-wrap justify-center sm:justify-start items-center gap-3 sm:gap-4 mb-3 text-sm">
+              <div *ngIf="user?.totalRating" class="flex items-center space-x-1">
+                <svg class="w-4 h-4 text-yellow-400 fill-current flex-shrink-0" viewBox="0 0 24 24">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                </svg>
+                <span class="font-semibold text-gray-900">{{ user?.totalRating }}</span>
+                <span class="text-gray-600 whitespace-nowrap">({{ user?.totalReviews }})</span>
+              </div>
+              <div *ngIf="user?.responseRate" class="text-gray-600">
+                <span class="font-semibold text-gray-900">{{ user?.responseRate }}%</span> response
+              </div>
+            </div>
+
+            <p *ngIf="user?.bio" class="text-xs sm:text-sm text-gray-700 leading-relaxed line-clamp-3 sm:line-clamp-2">{{ user?.bio }}</p>
+            <p *ngIf="!user?.bio" class="text-xs sm:text-sm text-gray-500 italic">No bio available</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-white rounded-lg shadow-sm border p-3 sm:p-4 text-center">
+          <div class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{{ stats.active }}</div>
+          <div class="text-xs text-gray-600">Active</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border p-3 sm:p-4 text-center">
+          <div class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{{ stats.rented }}</div>
+          <div class="text-xs text-gray-600">Rented</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border p-3 sm:p-4 text-center">
+          <div class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{{ user?.totalRating || '0' }}</div>
+          <div class="text-xs text-gray-600">Rating</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border p-3 sm:p-4 text-center">
+          <div class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{{ user?.totalReviews || '0' }}</div>
+          <div class="text-xs text-gray-600">Reviews</div>
+        </div>
+      </div>
+
+      <!-- Recent Reviews Section -->
+      <div *ngIf="recentReviews && recentReviews.length > 0" class="bg-white rounded-lg shadow-sm border p-4 sm:p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm sm:text-base font-semibold text-gray-900">Recent Reviews</h3>
+          <button
+            (click)="onViewAllReviews()"
+            class="text-blue-600 hover:text-blue-700 text-xs font-medium">
+            View all
+          </button>
+        </div>
+        <div class="space-y-3">
+          <div *ngFor="let review of recentReviews" class="border-b border-gray-100 last:border-b-0 pb-3 last:pb-0">
+            <div class="flex items-start space-x-3">
+              <div class="flex-shrink-0">
+                <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                  <span class="text-xs font-medium text-gray-600">{{ getReviewerInitials(review) }}</span>
+                </div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mb-1">
+                  <span class="font-medium text-gray-900 text-sm truncate">{{ review.reviewerName }}</span>
+                  <div class="flex items-center space-x-1">
+                    <div class="flex items-center">
+                      <svg *ngFor="let star of getStarArray(review.rating)"
+                           class="w-3 h-3 text-yellow-400 fill-current" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                      </svg>
+                    </div>
+                    <span class="text-xs text-gray-500">{{ formatDate(review.createdAt) }}</span>
+                  </div>
+                </div>
+                <p class="text-gray-700 text-sm line-clamp-2 sm:line-clamp-3">{{ review.comment }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Listings Preview -->
+      <div *ngIf="activeListings && activeListings.length > 0" class="bg-white rounded-lg shadow-sm border p-4 sm:p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm sm:text-base font-semibold text-gray-900">Active Listings</h3>
+          <button
+            (click)="onViewAllListings()"
+            class="text-blue-600 hover:text-blue-700 text-xs font-medium">
+            View all ({{ stats.active }})
+          </button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          <div *ngFor="let listing of activeListings.slice(0, 6)"
+               class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200 cursor-pointer"
+               (click)="onViewListing(listing)">
+            <div class="aspect-w-16 aspect-h-9 bg-gray-200">
+              <img *ngIf="listing.images && listing.images.length > 0; else noImage"
+                   [src]="listing.images[0]"
+                   [alt]="listing.title"
+                   class="w-full h-20 sm:h-24 object-cover">
+              <ng-template #noImage>
+                <div class="w-full h-20 sm:h-24 bg-gray-200 flex items-center justify-center">
+                  <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
+              </ng-template>
+            </div>
+            <div class="p-3">
+              <h4 class="font-medium text-gray-900 mb-1 truncate text-sm">{{ listing.title }}</h4>
+              <p class="text-xs text-gray-600 mb-2 truncate">{{ listing.address }}</p>
+              <div class="flex items-center justify-between">
+                <p class="text-sm font-semibold text-gray-900">${{ listing.priceType }}/day</p>
+                <div *ngIf="listing.rating" class="flex items-center">
+                  <svg class="w-3 h-3 text-yellow-400 fill-current mr-1" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                  </svg>
+                  <span class="text-xs text-gray-600">{{ listing.rating }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>

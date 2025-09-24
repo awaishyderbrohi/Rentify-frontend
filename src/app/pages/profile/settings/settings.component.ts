@@ -297,17 +297,6 @@ export class ProfileSettingsComponent implements OnInit, OnDestroy {
       website: [''],
       dateOfBirth: [''],
       gender: [''],
-      profession: [''],
-      company: [''],
-      // Social Media
-      facebook: [''],
-      linkedin: [''],
-      instagram: [''],
-      twitter: [''],
-      // Emergency Contact
-      emergencyContactName: [''],
-      emergencyContactRelationship: [''],
-      emergencyContactPhone: ['']
     });
   }
 
@@ -335,7 +324,7 @@ export class ProfileSettingsComponent implements OnInit, OnDestroy {
       email: user.email || '',
       phoneNumber: user.phoneNumber || '',
       bio: user.bio || '',
-      address: user.address?.street || '',
+      address: user.address?.fullAddress || '',
       city: user.address?.city || '',
       state: user.address?.state || '',
       website: user.website || '',
@@ -360,8 +349,9 @@ export class ProfileSettingsComponent implements OnInit, OnDestroy {
         bio: formData.bio,
         website: formData.website,
         dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth) : undefined,
-        gender: formData.gender || undefined,
+        gender: formData.gender,
         address: {
+          fullAddress:formData.address,
           street: formData.address,
           city: formData.city,
           state: formData.state,
@@ -369,7 +359,7 @@ export class ProfileSettingsComponent implements OnInit, OnDestroy {
       };
 
       // Update profile via API
-      this.http.put(`${this.authService.BASE_URL}/users/profile`, updateData, {
+      this.http.put(`${this.authService.BASE_URL}/users/profile/update`, updateData, {
         withCredentials: true
       }).subscribe({
         next: (updatedUser: any) => {

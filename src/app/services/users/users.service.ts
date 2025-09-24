@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpEvent, HttpRequest } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { User } from '../../models/User.model';
+import { BaseResponse } from '../../models/BaseResponse.model';
 
 @Injectable({
   providedIn: 'root'
@@ -21,7 +23,12 @@ export class UsersService {
       withCredentials:true
     });
 
+
     return this.http.request(req);
+  }
+
+    getUserById(id:string): Observable<BaseResponse<User>>{
+    return this.http.get<BaseResponse<User>>(`${this.baseURL}/id/${id}`);
   }
 
 

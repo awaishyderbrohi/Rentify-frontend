@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { BaseResponse } from '../../models/BaseResponse.model';
+import { User } from '../../models/User.model';
 
 @Injectable({
   providedIn: 'root'
@@ -60,5 +61,12 @@ export class AuthService {
   sendVerificationEmail(): Observable<BaseResponse<string>>{
     return this.http.get<BaseResponse<string>>(`${this.BASE_URL}/auth/send-verification-email`,{withCredentials:true});
   }
+
+    getUserById(id:string): Observable<User>{
+    return this.http.get(`${this.BASE_URL}/${id}`);
+  }
+
+  getAllUserListingsById(id:string){}
+
 
 }

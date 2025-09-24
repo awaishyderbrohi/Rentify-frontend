@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Route, Router } from '@angular/router';
 
 interface Category {
   id: string;
@@ -192,7 +193,7 @@ export class CategorySectionComponent {
     }
   ];
 
-  constructor() {}
+  constructor(private router: Router) {}
 
   trackByCategory(index: number, category: Category): string {
     return category.id;
@@ -200,6 +201,8 @@ export class CategorySectionComponent {
 
   onCategoryClick(categoryId: string): void {
     console.log(`Category clicked: ${categoryId}`);
+
+    this.router.navigate(['/products/category', categoryId]);
     // Add your navigation logic here
     // Example: this.router.navigate(['/category', categoryId]);
   }

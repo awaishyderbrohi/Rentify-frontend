@@ -533,4 +533,8 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
 
   getRentalDuration(){}
 
+  navigateUserProfile(){
+    this.router.navigate(["/users",this.listing?.user.id]);
+  }
+
 }
