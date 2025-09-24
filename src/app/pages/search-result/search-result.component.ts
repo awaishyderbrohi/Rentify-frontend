@@ -288,7 +288,6 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
         case 'views':
           comparison = (a.views || 0) - (b.views || 0);
           break;
-
       }
 
       return direction === 'desc' ? -comparison : comparison;

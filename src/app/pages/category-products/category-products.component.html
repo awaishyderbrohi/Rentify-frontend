@@ -1,0 +1,482 @@
+<div class="min-h-screen bg-base-200">
+    <!-- Header Section -->
+    <div class="bg-base-100 shadow-sm border-b border-base-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Category Header -->
+            <div class="flex items-center gap-4 mb-6">
+                <div class="p-3 bg-neutral/10 rounded-xl">
+                    <svg class="w-8 h-8 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24" *ngIf="categoryInfo()">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="categoryInfo()?.icon" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-4xl font-bold text-base-content">{{ categoryInfo()?.name }}</h1>
+                    <p class="text-base-content/70 text-lg mt-1">{{ categoryInfo()?.description }}</p>
+                </div>
+            </div>
+
+            <!-- Results Summary -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-2xl font-semibold text-base-content">
+                        {{ filteredResults().length }} products found
+                    </div>
+                    <div class="text-base-content/70 text-sm mt-1">
+                        in {{ categoryInfo()?.name }}
+                    </div>
+                </div>
+
+                <!-- View Toggle -->
+                <div class="join">
+                    <button
+                        class="join-item btn btn-sm"
+                        [class.btn-neutral]="viewMode() === 'grid'"
+                        [class.btn-ghost]="viewMode() !== 'grid'"
+                        (click)="setViewMode('grid')">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                        </svg>
+                        Grid
+                    </button>
+                    <button
+                        class="join-item btn btn-sm"
+                        [class.btn-neutral]="viewMode() === 'list'"
+                        [class.btn-ghost]="viewMode() !== 'list'"
+                        (click)="setViewMode('list')">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        List
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex flex-col lg:flex-row gap-8">
+
+            <!-- Sidebar Filters -->
+            <div class="w-full lg:w-80 flex-shrink-0">
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="card-title">Filters</h2>
+                            <button class="btn btn-ghost btn-xs text-neutral" (click)="clearAllFilters()">
+                                Clear All
+                            </button>
+                        </div>
+
+                        <!-- Sort Options -->
+                        <div class="form-control mb-6">
+                            <label class="label">
+                                <span class="label-text font-semibold">Sort by</span>
+                            </label>
+                            <select
+                                class="select select-bordered w-full"
+                                [(ngModel)]="currentSort"
+                                (change)="onSortChange()">
+                                <option *ngFor="let option of sortOptions" [value]="option.key + '_' + option.direction">
+                                    {{ option.label }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Price Range -->
+                        <div class="form-control mb-6">
+                            <label class="label">
+                                <span class="label-text font-semibold">Price Range</span>
+                            </label>
+                            <div class="flex gap-2 mb-2">
+                                <input
+                                    type="number"
+                                    placeholder="Min"
+                                    class="input input-bordered input-sm flex-1"
+                                    [(ngModel)]="priceRange.min"
+                                    (input)="onPriceRangeChange()" />
+                                <span class="self-center text-base-content/50">-</span>
+                                <input
+                                    type="number"
+                                    placeholder="Max"
+                                    class="input input-bordered input-sm flex-1"
+                                    [(ngModel)]="priceRange.max"
+                                    (input)="onPriceRangeChange()" />
+                            </div>
+                            <div class="text-xs text-base-content/60">
+                                Found items: Rs{{ foundPriceRange().min }} - Rs{{ foundPriceRange().max }}
+                            </div>
+                        </div>
+
+                        <!-- Condition -->
+                        <div class="form-control mb-6" *ngIf="availableConditions().length > 0">
+                            <label class="label">
+                                <span class="label-text font-semibold">Condition</span>
+                            </label>
+                            <div class="space-y-2 max-h-32 overflow-y-auto">
+                                <label
+                                    *ngFor="let condition of availableConditions()"
+                                    class="label cursor-pointer justify-start">
+                                    <input
+                                        type="checkbox"
+                                        class="checkbox checkbox-neutral checkbox-sm"
+                                        [checked]="selectedFilters().condition.includes(condition.key)"
+                                        (change)="toggleFilter('condition', condition.key)" />
+                                    <span class="label-text ml-2 flex-1">{{ condition.label }}</span>
+                                    <span class="badge badge-ghost badge-sm">{{ condition.count }}</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Brand -->
+                        <div class="form-control mb-6" *ngIf="availableBrands().length > 0">
+                            <label class="label">
+                                <span class="label-text font-semibold">Brand</span>
+                            </label>
+                            <div class="space-y-2 max-h-48 overflow-y-auto">
+                                <label
+                                    *ngFor="let brand of availableBrands()"
+                                    class="label cursor-pointer justify-start">
+                                    <input
+                                        type="checkbox"
+                                        class="checkbox checkbox-neutral checkbox-sm"
+                                        [checked]="selectedFilters().brand.includes(brand.key)"
+                                        (change)="toggleFilter('brand', brand.key)" />
+                                    <span class="label-text ml-2 flex-1">{{ brand.label }}</span>
+                                    <span class="badge badge-ghost badge-sm">{{ brand.count }}</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Price Type -->
+                        <div class="form-control mb-6" *ngIf="availablePriceTypes().length > 0">
+                            <label class="label">
+                                <span class="label-text font-semibold">Price Type</span>
+                            </label>
+                            <div class="space-y-2">
+                                <label
+                                    *ngFor="let priceType of availablePriceTypes()"
+                                    class="label cursor-pointer justify-start">
+                                    <input
+                                        type="checkbox"
+                                        class="checkbox checkbox-neutral checkbox-sm"
+                                        [checked]="selectedFilters().priceType.includes(priceType.key)"
+                                        (change)="toggleFilter('priceType', priceType.key)" />
+                                    <span class="label-text ml-2 flex-1">{{ priceType.label }}</span>
+                                    <span class="badge badge-ghost badge-sm">{{ priceType.count }}</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Delivery Options -->
+                        <div class="form-control mb-6">
+                            <label class="label">
+                                <span class="label-text font-semibold">Delivery Options</span>
+                            </label>
+                            <div class="space-y-2">
+                                <label class="label cursor-pointer justify-start">
+                                    <input
+                                        type="checkbox"
+                                        class="checkbox checkbox-neutral checkbox-sm"
+                                        [checked]="selectedFilters().deliveryOptions.includes('pickup')"
+                                        (change)="toggleFilter('deliveryOptions', 'pickup')" />
+                                    <span class="label-text ml-2">Pickup available</span>
+                                </label>
+                                <label class="label cursor-pointer justify-start">
+                                    <input
+                                        type="checkbox"
+                                        class="checkbox checkbox-neutral checkbox-sm"
+                                        [checked]="selectedFilters().deliveryOptions.includes('delivery')"
+                                        (change)="toggleFilter('deliveryOptions', 'delivery')" />
+                                    <span class="label-text ml-2">Delivery available</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Tags -->
+                        <div class="form-control" *ngIf="availableTags().length > 0">
+                            <label class="label">
+                                <span class="label-text font-semibold">Popular Tags</span>
+                            </label>
+                            <div class="flex flex-wrap gap-2">
+                                <label
+                                    *ngFor="let tag of availableTags()"
+                                    class="cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        class="hidden"
+                                        [checked]="selectedFilters().tags.includes(tag.key)"
+                                        (change)="toggleFilter('tags', tag.key)" />
+                                    <div
+                                        class="badge badge-outline hover:badge-neutral transition-colors"
+                                        [class.badge-neutral]="selectedFilters().tags.includes(tag.key)">
+                                        {{ tag.label }} ({{ tag.count }})
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="flex-1">
+                <!-- Active Filters -->
+                <div *ngIf="hasActiveFilters()" class="mb-6">
+                    <div class="flex flex-wrap gap-2 items-center">
+                        <span class="text-sm font-medium text-base-content/70">Active filters:</span>
+                        <div
+                            *ngFor="let filter of getActiveFilters()"
+                            class="badge badge-neutral gap-2">
+                            {{ filter.label }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div *ngIf="isLoading()" class="flex justify-center py-12">
+                    <span class="loading loading-spinner loading-lg text-neutral"></span>
+                </div>
+
+                <!-- No Results -->
+                <div *ngIf="!isLoading() && filteredResults().length === 0" class="text-center py-12">
+                    <div class="max-w-md mx-auto">
+                        <svg class="h-24 w-24 mx-auto text-base-content/30 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                        </svg>
+                        <h3 class="text-xl font-semibold text-base-content mb-2">No products found</h3>
+                        <p class="text-base-content/70 mb-4">
+                            Try adjusting your filters to find what you're looking for in this category.
+                        </p>
+                        <button class="btn btn-neutral" (click)="clearAllFilters()">
+                            Clear All Filters
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Results Grid/List -->
+                <div *ngIf="!isLoading() && filteredResults().length > 0">
+
+                    <!-- Grid View -->
+                    <div *ngIf="viewMode() === 'grid'" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <div
+                            *ngFor="let listing of paginatedResults()"
+                            class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer"
+                            (click)="navigateToProduct(listing.id)">
+
+                            <figure class="relative aspect-video">
+                                <img
+                                    *ngIf="listing.images.length > 0"
+                                    [src]="listing.images[0]"
+                                    [alt]="listing.title"
+                                    class="w-full h-full object-cover" />
+                                <div
+                                    *ngIf="listing.images.length === 0"
+                                    class="w-full h-full bg-base-300 flex items-center justify-center">
+                                    <svg class="h-16 w-16 text-base-content/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+
+                                <div class="absolute top-3 left-3">
+                                    <div [class]="getStatusBadgeClass(listing.status)" class="badge badge-sm font-medium">
+                                        {{ listing.status | titlecase }}
+                                    </div>
+                                </div>
+
+                                <!-- Brand/Model Badge -->
+                                <div class="absolute top-3 right-3" *ngIf="listing.brand">
+                                    <div class="badge badge-neutral badge-sm">
+                                        {{ listing.brand }}
+                                    </div>
+                                </div>
+                            </figure>
+
+                            <div class="card-body">
+                                <h3 class="card-title text-base line-clamp-2">{{ listing.title }}</h3>
+
+                                <!-- User Info -->
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="avatar">
+                                        <div class="w-8 rounded-full">
+                                            <img [src]="listing.user.profilePicUrl" [alt]="listing.user.firstName" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-medium">{{ listing.user.firstName }} {{ listing.user.lastName }}</div>
+                                        <div class="text-xs text-base-content/60">{{ getUserBadgeText(listing.user) }}</div>
+                                    </div>
+                                </div>
+
+                                <!-- Price -->
+                                <div class="flex items-baseline gap-1 mb-3">
+                                    <span class="text-2xl font-bold text-neutral">Rs{{ listing.price }}</span>
+                                    <span class="text-sm text-base-content/60">/ {{ listing.priceType }}</span>
+                                </div>
+
+                                <!-- Condition & Location -->
+                                <div class="flex items-center justify-between text-sm text-base-content/70 mb-3">
+                                    <div class="flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        </svg>
+                                        {{ listing.area }}, {{ listing.city }}
+                                    </div>
+                                    <div class="badge badge-outline badge-sm" *ngIf="listing.condition">
+                                        {{ listing.condition | titlecase }}
+                                    </div>
+                                </div>
+
+                                <!-- Features -->
+                                <div class="card-actions justify-start">
+                                    <div
+                                        *ngIf="listing.deliveryOptions.pickup"
+                                        class="badge badge-neutral badge-outline">
+                                        Pickup
+                                    </div>
+                                    <div
+                                        *ngIf="listing.deliveryOptions.delivery"
+                                        class="badge badge-neutral badge-outline">
+                                        Delivery
+                                    </div>
+                                    <div class="badge badge-ghost badge-sm" *ngIf="listing.views">
+                                        {{ listing.views }} views
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- List View -->
+                    <div *ngIf="viewMode() === 'list'" class="space-y-4">
+                        <div
+                            *ngFor="let listing of paginatedResults()"
+                            class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer"
+                            (click)="navigateToProduct(listing.id)">
+
+                            <div class="card-body p-0">
+                                <div class="flex">
+                                    <figure class="w-48 aspect-video flex-shrink-0 relative">
+                                        <img
+                                            *ngIf="listing.images.length > 0"
+                                            [src]="listing.images[0]"
+                                            [alt]="listing.title"
+                                            class="w-full h-full object-cover rounded-l-2xl" />
+                                        <div
+                                            *ngIf="listing.images.length === 0"
+                                            class="w-full h-full bg-base-300 flex items-center justify-center rounded-l-2xl">
+                                            <svg class="h-12 w-12 text-base-content/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+
+                                        <div class="absolute top-3 left-3">
+                                            <div [class]="getStatusBadgeClass(listing.status)" class="badge badge-sm font-medium">
+                                                {{ listing.status | titlecase }}
+                                            </div>
+                                        </div>
+                                    </figure>
+
+                                    <div class="flex-1 p-6">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-1">
+                                                <div class="flex items-start justify-between mb-2">
+                                                    <h3 class="text-xl font-semibold">{{ listing.title }}</h3>
+                                                    <div class="flex gap-2 ml-4">
+                                                        <div class="badge badge-neutral badge-sm" *ngIf="listing.brand">
+                                                            {{ listing.brand }}
+                                                        </div>
+                                                        <div class="badge badge-outline badge-sm" *ngIf="listing.condition">
+                                                            {{ listing.condition | titlecase }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- User Info -->
+                                                <div class="flex items-center gap-3 mb-3">
+                                                    <div class="avatar">
+                                                        <div class="w-8 rounded-full">
+                                                            <img [src]="listing.user.profilePicUrl" [alt]="listing.user.firstName" />
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <div class="text-sm font-medium">{{ listing.user.firstName }}</div>
+                                                        <div class="text-xs text-base-content/60">{{ getUserBadgeText(listing.user) }}</div>
+                                                    </div>
+                                                </div>
+
+                                                <p class="text-base-content/70 text-sm mb-3 line-clamp-2">{{ listing.description }}</p>
+
+                                                <div class="flex items-center gap-4 text-sm text-base-content/70">
+                                                    <div class="flex items-center gap-1">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                        </svg>
+                                                        {{ listing.area }}, {{ listing.city }}
+                                                    </div>
+                                                    <div class="flex items-center gap-1" *ngIf="listing.views">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                        </svg>
+                                                        {{ listing.views }} views
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex flex-col items-end gap-3 ml-4">
+                                                <div class="text-right">
+                                                    <div class="text-2xl font-bold text-neutral">Rs{{ listing.price }}</div>
+                                                    <div class="text-sm text-base-content/60">/ {{ listing.priceType }}</div>
+                                                </div>
+                                                <div class="flex gap-2">
+                                                    <div
+                                                        *ngIf="listing.deliveryOptions.pickup"
+                                                        class="badge badge-neutral badge-outline">
+                                                        Pickup
+                                                    </div>
+                                                    <div
+                                                        *ngIf="listing.deliveryOptions.delivery"
+                                                        class="badge badge-neutral badge-outline">
+                                                        Delivery
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div *ngIf="totalPages() > 1" class="flex justify-center mt-12">
+                        <div class="join">
+                            <button
+                                class="join-item btn"
+                                [disabled]="currentPage() === 1"
+                                (click)="currentPage() > 1 && goToPage(currentPage() - 1)">
+                                Previous
+                            </button>
+
+                            <button
+                                *ngFor="let page of getVisiblePages()"
+                                class="join-item btn"
+                                [class.btn-neutral]="page === currentPage()"
+                                [class.btn-active]="page === currentPage()"
+                                (click)="goToPage(page)">
+                                {{ page }}
+                            </button>
+
+                            <button
+                                class="join-item btn"
+                                [disabled]="currentPage() === totalPages()"
+                                (click)="currentPage() < totalPages() && goToPage(currentPage() + 1)">
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

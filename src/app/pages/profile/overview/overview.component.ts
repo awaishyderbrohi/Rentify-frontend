@@ -164,7 +164,7 @@ import { Listing } from '../my-listings/my-listings.component';
           <div class="text-sm text-gray-600">Active Listings</div>
         </div>
         <div class="border border-gray-200 rounded-xl p-6 text-center">
-          <div class="text-3xl font-bold text-gray-900 mb-1">{{ user?.totalRating || '' }}</div>
+          <div class="text-3xl font-bold text-gray-900 mb-1">{{ user?.totalRating || '0' }}</div>
           <div class="text-sm text-gray-600">Average Rating</div>
         </div>
       </div>

@@ -71,4 +71,29 @@ export class ListingsService {
     return this.http.get<BaseResponse<Listing[]>>(`${this.BASE_URL}/random`,{params});
   }
 
+  changeListingStatus(id:string, status:string): Observable<BaseResponse<string>>{
+    let params = new HttpParams();
+    params = params.set('id',id);
+    params = params.set('status',status);
+    return this.http.get<BaseResponse<string>>(`${this.BASE_URL}/change-status`,{params,withCredentials:true});
+  }
+
+  getProductsByCategory(category:string, page:number): Observable<BaseResponse<BasePageRes<Listing>>>{
+    if(page>0){
+      page = page-1
+    }
+    let params = new HttpParams();
+    params = params.set('category',category)
+    params = params.set('page',page)
+    return this.http.get<BaseResponse<BasePageRes<Listing>>>(`${this.BASE_URL}/category`,{params,withCredentials:true});
+  }
+
+
+   getRelatedItems(lisitngId:string): Observable<BaseResponse<Listing[]>>{
+
+    return this.http.get<BaseResponse<Listing[]>>(`${this.BASE_URL}/${lisitngId}/related`);
+  }
+
+
+
 }

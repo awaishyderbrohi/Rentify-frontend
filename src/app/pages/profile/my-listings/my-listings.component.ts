@@ -253,4 +253,17 @@ updateStats() {
     }
     return options.length > 0 ? options.join(', ') : 'Contact seller';
   }
+
+  changeStatus(id:string,status:string){
+      this.listingsService.changeListingStatus(id,status).subscribe({
+        next:(res)=>{
+
+        },
+        error:(error)=>{
+          console.log(error.message);
+        }
+      })
+  }
+
+
 }

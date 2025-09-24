@@ -58,37 +58,73 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private locationSearchSubject = new Subject<string>();
 
   categories: Category[] = [
-    {
-      id: 'tools',
-      name: 'Tools & Equipment',
-      icon: 'M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z',
-      color: 'blue'
-    },
-    {
-      id: 'electronics',
-      name: 'Electronics',
-      icon: 'M13 10V3L4 14h7v7l9-11h-7z',
-      color: 'green'
-    },
-    {
-      id: 'vehicles',
-      name: 'Vehicles',
-      icon: 'M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M10.5 4L12 2l1.5 2M21 10l-2-2m-14 2l-2-2',
-      color: 'purple'
-    },
-    {
-      id: 'furniture',
-      name: 'Furniture',
-      icon: 'M3 7V5a2 2 0 012-2h2m-4 4h16M3 7l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12M7 7v6m4-6v6m4-6v6',
-      color: 'orange'
-    },
-    {
-      id: 'sports',
-      name: 'Sports & Recreation',
-      icon: 'M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12z',
-      color: 'red'
-    }
-  ];
+  {
+    id: 'printers',
+    name: 'Printers & Scanners',
+    icon: 'M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z',
+    color: 'blue'
+  },
+  {
+    id: 'photography',
+    name: 'Photography & Video',
+    icon: 'M3 9a2 2 0 012-2h.93l.82-1.64A2 2 0 018.93 4h6.14a2 2 0 011.82 1.36L17.07 7H18a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V9z',
+    color: 'purple'
+  },
+  {
+    id: 'vehicles',
+    name: 'Cars & Bikes',
+    icon: 'M19 17h2c.6 0 1-.4 1-1s-.4-1-1-1h-2v2zm-7-6l.94-2.06L15 8l-2.06-.94L12 5l-.94 2.06L9 8l2.06.94L12 11z',
+    color: 'orange'
+  },
+  {
+    id: 'tools',
+    name: 'Tools & Equipments',
+    icon: 'M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z',
+    color: 'green'
+  },
+  {
+    id: 'audio',
+    name: 'Audio & Music',
+    icon: 'M15.536 5.464a9 9 0 010 12.728M12.879 8.121a5 5 0 010 7.758M9.5 12a2.5 2.5 0 01-5 0 2.5 2.5 0 015 0z',
+    color: 'red'
+  },
+  {
+    id: 'computing',
+    name: 'Computing & Tech',
+    icon: 'M9 3v2.01A6 6 0 003 11v6a2 2 0 002 2h14a2 2 0 002-2v-6a6 6 0 00-6-5.99V3a1 1 0 10-2 0v2H11V3a1 1 0 10-2 0z',
+    color: 'teal'
+  },
+  {
+    id: 'electronics',
+    name: 'Electronics',
+    icon: 'M13 10V3L4 14h7v7l9-11h-7z',
+    color: 'cyan'
+  },
+  {
+    id: 'books',
+    name: 'Books & Education',
+    icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
+    color: 'yellow'
+  },
+  {
+    id: 'home',
+    name: 'Home & Garden',
+    icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
+    color: 'pink'
+  },
+  {
+    id: 'sports',
+    name: 'Sports',
+    icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
+    color: 'indigo'
+  },
+  {
+    id: 'other',
+    name: 'Other',
+    icon: 'M19 11H5m14-7l2 2-2 2M5 21l2-2-2-2',
+    color: 'gray'
+  }
+];
 
   constructor(
     private router: Router,
@@ -324,7 +360,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
       queryParams.lng = parseFloat(selectedLoc.lon);
     }
 
-    this.router.navigate(['/category', category.id], { queryParams });
+    this.router.navigate(['/products/category', category.id], { queryParams });
   }
 
   onLogin(): void {

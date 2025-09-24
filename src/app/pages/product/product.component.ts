@@ -8,7 +8,6 @@ import { AuthService } from '../../services/auth/auth.service';
 import { ToasterService } from '../../services/toaster/toaster.service';
 import { User } from '../../models/User.model';
 import { Listing } from '../profile/my-listings/my-listings.component';
-import { ReportModalComponent } from './report-modal/report-modal.component';
 
 // Declare Google Maps types
 declare global {
@@ -87,8 +86,11 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
       if (params['id']) {
         this.loadProduct(params['id']);
+
       }
     });
+
+
   }
 
   ngAfterViewInit() {
@@ -151,6 +153,7 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
         this.checkIfFavorited();
         this.incrementViewCount();
 
+
         // Initialize map if coordinates are available and Google Maps is loaded
         if (this.listing?.coordinates && this.mapContainer && window.google) {
           setTimeout(() => {
@@ -165,6 +168,13 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     });
   }
+
+  refreshPage() {
+  this.router.navigate([this.router.url])
+    .then(() => {
+
+    });
+}
 
   private initializeMap() {
     if (!this.listing?.coordinates || !this.mapContainer || !window.google) {
@@ -281,15 +291,15 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!this.listing) return;
 
     // Simulate loading related products - replace with actual API call
-    // this.listingsService.getRelatedListings(this.listing.category, this.listing.id)
-    //   .subscribe({
-    //     next: (products) => {
-    //       this.relatedProducts = products.slice(0, 4);
-    //     },
-    //     error: (error) => {
-    //       console.error('Error loading related products:', error);
-    //     }
-    //   });
+    this.listingsService.getRelatedItems(this.listing.id)
+      .subscribe({
+        next: (res) => {
+          this.relatedProducts = res.t;
+        },
+        error: (error) => {
+          console.error('Error loading related products:', error);
+        }
+      });
 
     // Temporary mock data
     this.relatedProducts = [];
@@ -328,42 +338,14 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
       : this.selectedImageIndex - 1;
   }
 
-  toggleFavorite() {
-    // if (!this.authService.isAuthenticated()) {
-    //   this.toaster.show('Please login to add favorites', 'warning');
-    //   this.router.navigate(['/login']);
-    //   return;
-    // }
 
-    // if (!this.listing) return;
-
-    // if (this.isFavorited) {
-      // this.listingsService.removeFavorite(this.listing.id).subscribe({
-      //   next: () => {
-      //     this.isFavorited = false;
-      //     this.toaster.show('Removed from favorites', 'success');
-      //   }
-      // });
-    //   this.isFavorited = false;
-    //   this.toaster.show('Removed from favorites', 'success');
-    // } else {
-      // this.listingsService.addFavorite(this.listing.id).subscribe({
-      //   next: () => {
-      //     this.isFavorited = true;
-      //     this.toaster.show('Added to favorites', 'success');
-      //   }
-      // });
-      this.isFavorited = true;
-      this.toaster.show('Added to favorites', 'success');
-    // }
-  }
 
   showContact() {
-    // if (!this.authService.isAuthenticated()) {
-    //   this.toaster.show('Please login to view contact information', 'warning');
-    //   this.router.navigate(['/login']);
-    //   return;
-    // }
+    if (!this.authService.isLoggedIn()) {
+      this.toaster.show('Please login to view contact information', 'warning');
+      this.router.navigate(['/login']);
+      return;
+    }
     this.showContactInfo = true;
   }
 
@@ -375,11 +357,18 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
 
+
     if (this.listing?.status !== 'ACTIVE') {
-      this.toaster.show('This item is not available for booking', 'warning');
+      this.toaster.show('This item is not available for booking', 'info');
       return;
     }
 
+    let currentUser = this.authService.getCurrentUser();
+
+    if(!currentUser.emailVerified){
+      this.toaster.show("Please verify your email Address first",'info');
+      return;
+    }
     this.showBookingForm = true;
     this.resetBookingForm();
   }
@@ -482,7 +471,7 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Simulate report submission
     const reason = prompt('Please provide a reason for reporting this listing:');
-    ReportModalComponent;
+
     if (reason) {
       setTimeout(() => {
         this.toaster.show('Report submitted successfully. Thank you for helping keep our platform safe.', 'success');
@@ -526,7 +515,9 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   navigateToProduct(productId: string) {
-    this.router.navigate(['/product', productId]);
+    this.router.navigate(['/products', productId]).then(() => {
+    window.location.reload();
+  });
   }
 
   get minDate(): string {

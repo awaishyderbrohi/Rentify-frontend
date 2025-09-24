@@ -9,6 +9,7 @@ import { ProfileComponent } from './pages/profile/profile.component';
 import { ForgetComponent } from './pages/forget/forget.component';
 import { ProductPageComponent } from './pages/product/product.component';
 import { SearchResultsComponent } from './pages/search-result/search-result.component';
+import { ProductsByCategoryComponent } from './pages/category-products/category-products.component';
 
 
 export const routes: Routes = [
@@ -40,6 +41,7 @@ export const routes: Routes = [
   },
    {path:"search",component:SearchResultsComponent},
   { path:'products/:id',component:ProductPageComponent},
+  { path:'products/category/:category',component:ProductsByCategoryComponent},
   { path:'**', component:PageNotFoundComponent},
 
 ];
