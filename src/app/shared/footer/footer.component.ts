@@ -1,228 +1,65 @@
-import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-footer',
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl:`./footer.component.html`,
-  styles: [`
-    .glassmorphism {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-    }
-
-    .logo-gradient {
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-    }
-
-    .hover-lift {
-      transition: transform 0.2s ease-in-out;
-    }
-
-    .hover-lift:hover {
-      transform: translateY(-1px);
-    }
-
-    .search-shadow {
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    }
-
-    .dropdown-enter {
-      animation: dropdownEnter 0.2s ease-out;
-    }
-
-    @keyframes dropdownEnter {
-      from {
-        opacity: 0;
-        transform: translateY(-10px) scale(0.95);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
-    .mobile-backdrop {
-      animation: fadeIn 0.2s ease-out;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    /* Custom scrollbar for location dropdown */
-    .location-dropdown-container .max-h-80::-webkit-scrollbar,
-    .location-dropdown-container .max-h-60::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    .location-dropdown-container .max-h-80::-webkit-scrollbar-track,
-    .location-dropdown-container .max-h-60::-webkit-scrollbar-track {
-      background: #f1f5f9;
-      border-radius: 4px;
-    }
-
-    .location-dropdown-container .max-h-80::-webkit-scrollbar-thumb,
-    .location-dropdown-container .max-h-60::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 4px;
-    }
-
-    .location-dropdown-container .max-h-80::-webkit-scrollbar-thumb:hover,
-    .location-dropdown-container .max-h-60::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
-  `]
+  template: `
+    <footer class="footer footer-center bg-base-200 text-base-content p-4">
+      <aside class="grid-flow-col items-center">
+        <div class="flex items-center gap-2">
+          <div class="avatar placeholder">
+            <div class="bg-neutral text-neutral-content w-8 rounded-lg">
+              <span class="text-sm font-bold">R</span>
+            </div>
+          </div>
+          <p class="font-bold">Rentify</p>
+          <div class="divider divider-horizontal"></div>
+          <p class="text-sm opacity-70">© {{ currentYear }} All rights reserved</p>
+        </div>
+      </aside>
+      <nav class="grid-flow-col gap-4">
+        <a class="link link-hover text-sm" (click)="onLink('about')">About</a>
+        <a class="link link-hover text-sm" (click)="onLink('help')">Help</a>
+        <a class="link link-hover text-sm" (click)="onLink('privacy')">Privacy</a>
+        <a class="link link-hover text-sm" (click)="onLink('terms')">Terms</a>
+      </nav>
+      <nav class="grid-flow-col gap-2">
+        <a class="btn btn-ghost btn-sm btn-square" (click)="onSocial('facebook')">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+          </svg>
+        </a>
+        <a class="btn btn-ghost btn-sm btn-square" (click)="onSocial('twitter')">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+          </svg>
+        </a>
+        <a class="btn btn-ghost btn-sm btn-square" (click)="onSocial('instagram')">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+          </svg>
+        </a>
+      </nav>
+    </footer>
+  `
 })
 export class FooterComponent {
-  // Newsletter email signal
-  newsletterEmail = signal<string>('');
-
-  // Current year for copyright
   currentYear = new Date().getFullYear();
 
-  constructor() {}
-
-  // Newsletter subscription
-  onNewsletterSubscribe() {
-    if (this.isValidEmail(this.newsletterEmail())) {
-      console.log('Newsletter subscription:', this.newsletterEmail());
-      // TODO: Implement newsletter subscription logic
-      // You might want to call a service here to handle the subscription
-
-      // Show success message or handle the subscription
-      alert('Thank you for subscribing to our newsletter!');
-      this.newsletterEmail.set('');
-    }
+  onLink(type: string) {
+    console.log('Link clicked:', type);
+    // Handle navigation
   }
 
-  // Email validation
-  isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-
-  // Social media clicks
-  onSocialClick(platform: string) {
-    console.log('Social click:', platform);
-    // TODO: Implement social media navigation
-    const socialUrls: { [key: string]: string } = {
+  onSocial(platform: string) {
+    const urls: Record<string, string> = {
       facebook: 'https://facebook.com/rentify',
       twitter: 'https://twitter.com/rentify',
-      instagram: 'https://instagram.com/rentify',
-      linkedin: 'https://linkedin.com/company/rentify'
+      instagram: 'https://instagram.com/rentify'
     };
-
-    if (socialUrls[platform]) {
-      window.open(socialUrls[platform], '_blank');
+    
+    if (urls[platform]) {
+      window.open(urls[platform], '_blank');
     }
-  }
-
-  // Footer link clicks
-  onFooterLink(link: string) {
-    console.log('Footer link click:', link);
-    // TODO: Implement navigation to footer pages
-    // You might want to inject Router here and navigate
-
-    switch (link) {
-      case 'about':
-        // Navigate to about page
-        break;
-      case 'how-it-works':
-        // Navigate to how it works page
-        break;
-      case 'pricing':
-        // Navigate to pricing page
-        break;
-      case 'safety':
-        // Navigate to safety page
-        break;
-      case 'blog':
-        // Navigate to blog page
-        break;
-      case 'careers':
-        // Navigate to careers page
-        break;
-      default:
-        console.log('Unknown footer link:', link);
-    }
-  }
-
-  // Category link clicks
-  onCategoryLink(category: string) {
-    console.log('Category link click:', category);
-    // TODO: Implement category navigation
-    // Navigate to category page with filters
-  }
-
-  // Support link clicks
-  onSupportLink(link: string) {
-    console.log('Support link click:', link);
-    // TODO: Implement support page navigation
-
-    switch (link) {
-      case 'help':
-        // Navigate to help center
-        break;
-      case 'contact':
-        // Navigate to contact page
-        break;
-      case 'trust-safety':
-        // Navigate to trust & safety page
-        break;
-      case 'insurance':
-        // Navigate to insurance page
-        break;
-      case 'dispute':
-        // Navigate to dispute resolution page
-        break;
-      default:
-        console.log('Unknown support link:', link);
-    }
-  }
-
-  // App download clicks
-  onAppDownload(platform: string) {
-    console.log('App download click:', platform);
-    // TODO: Implement app store navigation
-    const appUrls: { [key: string]: string } = {
-      ios: 'https://apps.apple.com/app/rentify',
-      android: 'https://play.google.com/store/apps/details?id=com.rentify'
-    };
-
-    if (appUrls[platform]) {
-      window.open(appUrls[platform], '_blank');
-    }
-  }
-
-  // Legal link clicks
-  onLegalLink(link: string) {
-    console.log('Legal link click:', link);
-    // TODO: Implement legal page navigation
-
-    switch (link) {
-      case 'privacy':
-        // Navigate to privacy policy
-        break;
-      case 'terms':
-        // Navigate to terms of service
-        break;
-      case 'cookies':
-        // Navigate to cookie policy
-        break;
-      default:
-        console.log('Unknown legal link:', link);
-    }
-  }
-
-  // Language selector click
-  onLanguageClick() {
-    console.log('Language selector clicked');
-    // TODO: Implement language selection dropdown or modal
-    // You might want to show a dropdown with available languages
   }
 }
