@@ -9,11 +9,10 @@ import { ToasterService } from '../../services/toaster/toaster.service';
 import { User } from '../../models/User.model';
 import { Listing } from '../profile/my-listings/my-listings.component';
 
-// Declare Google Maps types
+// Declare Leaflet types
 declare global {
   interface Window {
-    google: any;
-    initGoogleMap: () => void;
+    L: any;
   }
 }
 
@@ -28,7 +27,6 @@ interface DeliveryOptions {
   deliveryRadius?: number;
   deliveryFee?: number;
 }
-
 
 interface BookingRequest {
   startDate: string;
@@ -60,11 +58,11 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
   showContactInfo = false;
   isFavorited = false;
   isMapLoaded = false;
-  getRentalCost= 0;
-  // Google Maps related properties
-  private map: google.maps.Map | undefined;
-  private marker: google.maps.Marker | null = null;
-  private infoWindow: google.maps.InfoWindow | null = null;
+  getRentalCost = 0;
+
+  // Leaflet map related properties
+  private map: any;
+  private marker: any = null;
 
   // Booking form
   showBookingForm = false;
@@ -82,20 +80,17 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
   private destroy$ = new Subject<void>();
 
   ngOnInit() {
-    this.loadGoogleMapsScript();
+    this.loadLeafletScript();
     this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
       if (params['id']) {
         this.loadProduct(params['id']);
-
       }
     });
-
-
   }
 
   ngAfterViewInit() {
     // Initialize map after view is initialized
-    if (this.listing && this.listing.coordinates && window.google) {
+    if (this.listing && this.listing.coordinates && window.L) {
       setTimeout(() => {
         this.initializeMap();
       }, 100);
@@ -107,36 +102,39 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.destroy$.complete();
 
     // Clean up map resources
-    if (this.marker) {
-      this.marker.setMap(null);
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
     }
-    if (this.infoWindow) {
-      this.infoWindow.close();
-    }
-
   }
 
-  private loadGoogleMapsScript() {
-    // Check if Google Maps script is already loaded
-    if (window.google && window.google.maps) {
+  private loadLeafletScript() {
+    // Check if Leaflet is already loaded
+    if (window.L) {
       return;
     }
 
-    // Create script element
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=geometry,places`;
-    script.async = true;
-    script.defer = true;
+    // Load Leaflet CSS
+    const cssLink = document.createElement('link');
+    cssLink.rel = 'stylesheet';
+    cssLink.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    cssLink.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+    cssLink.crossOrigin = '';
+    document.head.appendChild(cssLink);
 
-    // Set up callback function
-    window.initGoogleMap = () => {
-      if (this.listing?.coordinates && this.mapContainer) {
-        this.initializeMap();
-      }
-    };
+    // Load Leaflet JS
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+    script.crossOrigin = '';
+    script.async = true;
 
     script.onload = () => {
-      window.initGoogleMap();
+      if (this.listing?.coordinates && this.mapContainer) {
+        setTimeout(() => {
+          this.initializeMap();
+        }, 100);
+      }
     };
 
     document.head.appendChild(script);
@@ -147,15 +145,14 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.listingsService.getListingById(id).subscribe({
       next: (res) => {
-        this.listing = res.t; // Assuming the API returns data in a 'data' property
+        this.listing = res.t;
         this.isLoading = false;
         this.loadRelatedProducts();
         this.checkIfFavorited();
         this.incrementViewCount();
 
-
-        // Initialize map if coordinates are available and Google Maps is loaded
-        if (this.listing?.coordinates && this.mapContainer && window.google) {
+        // Initialize map if coordinates are available and Leaflet is loaded
+        if (this.listing?.coordinates && this.mapContainer && window.L) {
           setTimeout(() => {
             this.initializeMap();
           }, 100);
@@ -170,14 +167,14 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   refreshPage() {
-  this.router.navigate([this.router.url])
-    .then(() => {
-
-    });
-}
+    this.router.navigate([this.router.url])
+      .then(() => {
+        // Page refreshed
+      });
+  }
 
   private initializeMap() {
-    if (!this.listing?.coordinates || !this.mapContainer || !window.google) {
+    if (!this.listing?.coordinates || !this.mapContainer || !window.L) {
       this.isMapLoaded = true;
       return;
     }
@@ -185,85 +182,94 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
     try {
       const { lat, lng } = this.listing.coordinates;
 
-      // Map options
-      const mapOptions: google.maps.MapOptions = {
-        center: { lat, lng },
-        zoom: 15,
-        mapTypeId: google.maps.MapTypeId.ROADMAP,
-        zoomControl: true,
-        streetViewControl: true,
-        fullscreenControl: false,
-        mapTypeControl: false,
-        gestureHandling: 'cooperative',
-        styles: [
-          {
-            featureType: 'poi',
-            elementType: 'labels',
-            stylers: [{ visibility: 'off' }]
-          }
-        ]
-      };
-
       // Create map instance
-      this.map = new google.maps.Map(this.mapContainer.nativeElement, mapOptions);
+      this.map = window.L.map(this.mapContainer.nativeElement, {
+        center: [lat, lng],
+        zoom: 15,
+        zoomControl: true,
+        scrollWheelZoom: true,
+        doubleClickZoom: true,
+        boxZoom: true,
+        keyboard: true,
+        dragging: true,
+        touchZoom: true
+      });
+
+      // Add OpenStreetMap tile layer (free)
+      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+      }).addTo(this.map);
+
+      // Create custom marker icon
+      const customIcon = window.L.divIcon({
+        className: 'custom-marker',
+        html: `
+          <div style="
+            background: #ef4444;
+            width: 30px;
+            height: 30px;
+            border-radius: 50% 50% 50% 0;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            transform: rotate(-45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          ">
+            <div style="
+              background: white;
+              width: 8px;
+              height: 8px;
+              border-radius: 50%;
+              transform: rotate(45deg);
+            "></div>
+          </div>
+        `,
+        iconSize: [30, 30],
+        iconAnchor: [15, 30],
+        popupAnchor: [0, -30]
+      });
 
       // Create marker
-      this.marker = new google.maps.Marker({
-        position: { lat, lng },
-        map: this.map,
-        title: this.listing.title,
-        animation: google.maps.Animation.DROP,
-        icon: {
-          url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-          scaledSize: new google.maps.Size(32, 32),
-          origin: new google.maps.Point(0, 0),
-          anchor: new google.maps.Point(16, 32)
-        }
-      });
+      this.marker = window.L.marker([lat, lng], {
+        icon: customIcon
+      }).addTo(this.map);
 
-      // Create info window
-      this.infoWindow = new google.maps.InfoWindow({
-        content: `
-          <div style="padding: 12px; max-width: 250px;">
-            <h3 style="font-weight: 600; color: #1f2937; margin: 0 0 8px 0; font-size: 16px;">${this.listing.title}</h3>
-            <p style="margin: 4px 0; font-size: 14px; color: #6b7280;">${this.listing.area}, ${this.listing.city}</p>
-            <p style="margin: 4px 0; font-size: 12px; color: #9ca3af;">${this.listing.address}</p>
-            <div style="margin-top: 8px;">
-              <span style="font-weight: 600; color: #3b82f6; font-size: 14px;">$${this.listing.price}</span>
-              <span style="color: #6b7280; font-size: 12px;"> / ${this.listing.priceType}</span>
-            </div>
+      // Create popup content
+      const popupContent = `
+        <div style="padding: 8px; max-width: 250px; font-family: system-ui, sans-serif;">
+          <h3 style="font-weight: 600; color: #1f2937; margin: 0 0 8px 0; font-size: 16px; line-height: 1.3;">${this.listing.title}</h3>
+          <p style="margin: 4px 0; font-size: 14px; color: #6b7280;">${this.listing.area}, ${this.listing.city}</p>
+          <p style="margin: 4px 0; font-size: 12px; color: #9ca3af; line-height: 1.3;">${this.listing.address}</p>
+          <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+            <span style="font-weight: 600; color: #3b82f6; font-size: 14px;">Rs${this.listing.price}</span>
+            <span style="color: #6b7280; font-size: 12px;"> / ${this.listing.priceType}</span>
           </div>
-        `
-      });
+        </div>
+      `;
 
-      // Add click event to marker
-      this.marker.addListener('click', () => {
-        if (this.infoWindow && this.marker) {
-          this.infoWindow.open(this.map, this.marker);
-        }
-      });
+      // Bind popup to marker
+      this.marker.bindPopup(popupContent);
 
-      // Add circle to show approximate area
-      const circle = new google.maps.Circle({
-        strokeColor: '#3b82f6',
-        strokeOpacity: 0.8,
-        strokeWeight: 2,
+      // Add a circle to show approximate area (optional)
+      const circle = window.L.circle([lat, lng], {
+        color: '#3b82f6',
         fillColor: '#3b82f6',
         fillOpacity: 0.1,
-        map: this.map,
-        center: { lat, lng },
-        radius: 500 // 500 meters
-      });
+        radius: 500, // 500 meters
+        weight: 2
+      }).addTo(this.map);
 
       this.isMapLoaded = true;
 
       // Ensure map renders properly
-      google.maps.event.addListenerOnce(this.map, 'idle', () => {
-        google.maps.event.trigger(this.map!, 'resize');
-      });
+      setTimeout(() => {
+        this.map.invalidateSize();
+      }, 250);
 
     } catch (error) {
-      console.error('Error initializing Google Maps:', error);
+      console.error('Error initializing Leaflet map:', error);
       this.isMapLoaded = true;
     }
   }
@@ -277,20 +283,19 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
     // Try to detect device/browser and open appropriate map app
     if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
       // iOS - try Apple Maps first, fallback to Google Maps
-      window.open(`maps://maps.google.com/maps?daddr=${lat},${lng}&amp;ll=`);
+      window.open(`maps://maps.apple.com/maps?daddr=${lat},${lng}&ll=`);
     } else if (/Android/.test(navigator.userAgent)) {
       // Android - open Google Maps
       window.open(`geo:${lat},${lng}?q=${lat},${lng}(${address})`);
     } else {
-      // Desktop - open Google Maps in browser
-      window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`);
+      // Desktop - open OpenStreetMap in browser
+      window.open(`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}&zoom=15&layers=M`);
     }
   }
 
   loadRelatedProducts() {
     if (!this.listing) return;
 
-    // Simulate loading related products - replace with actual API call
     this.listingsService.getRelatedItems(this.listing.id)
       .subscribe({
         next: (res) => {
@@ -306,20 +311,12 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   checkIfFavorited() {
-    // if (!this.listing || !this.authService.isAuthenticated()) return;
-
-    // Check if user has favorited this listing
-    // this.listingsService.isFavorited(this.listing.id).subscribe({
-    //   next: (favorited) => {
-    //     this.isFavorited = favorited;
-    //   }
-    // });
+    // Implementation for checking if favorited
   }
 
   incrementViewCount() {
     if (!this.listing) return;
-
-    // this.listingsService.incrementViews(this.listing.id).subscribe();
+    // Implementation for incrementing view count
   }
 
   selectImage(index: number) {
@@ -338,8 +335,6 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
       : this.selectedImageIndex - 1;
   }
 
-
-
   showContact() {
     if (!this.authService.isLoggedIn()) {
       this.toaster.show('Please login to view contact information', 'warning');
@@ -356,8 +351,6 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-
-
     if (this.listing?.status !== 'ACTIVE') {
       this.toaster.show('This item is not available for booking', 'info');
       return;
@@ -365,8 +358,8 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
 
     let currentUser = this.authService.getCurrentUser();
 
-    if(!currentUser.emailVerified){
-      this.toaster.show("Please verify your email Address first",'info');
+    if (!currentUser.emailVerified) {
+      this.toaster.show("Please verify your email Address first", 'info');
       return;
     }
     this.showBookingForm = true;
@@ -405,7 +398,7 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Add delivery fee if delivery is selected
     if (this.bookingRequest.deliveryOption === 'delivery' &&
-        this.listing.deliveryOptions.deliveryFee) {
+      this.listing.deliveryOptions.deliveryFee) {
       total += this.listing.deliveryOptions.deliveryFee;
     }
 
@@ -425,20 +418,6 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    // this.listingsService.createBookingRequest({
-    //   ...this.bookingRequest,
-    //   listingId: this.listing.id
-    // }).subscribe({
-    //   next: () => {
-    //     this.toaster.show('Booking request sent successfully!', 'success');
-    //     this.showBookingForm = false;
-    //     this.resetBookingForm();
-    //   },
-    //   error: (error) => {
-    //     this.toaster.show('Failed to send booking request', 'error');
-    //   }
-    // });
-
     // Temporary success simulation
     this.toaster.show('Booking request sent successfully!', 'success');
     this.showBookingForm = false;
@@ -457,7 +436,6 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
       navigator.clipboard.writeText(window.location.href).then(() => {
         this.toaster.show('Link copied to clipboard!', 'success');
       }).catch(() => {
-        // If clipboard access fails, show the URL in an alert
         alert(`Share this link: ${window.location.href}`);
       });
     }
@@ -469,7 +447,6 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    // Simulate report submission
     const reason = prompt('Please provide a reason for reporting this listing:');
 
     if (reason) {
@@ -498,7 +475,7 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
     if (deliveryOptions.pickup) options.push('Pickup available');
     if (deliveryOptions.delivery) {
       const deliveryText = deliveryOptions.deliveryFee
-        ? `Delivery available ($${deliveryOptions.deliveryFee})`
+        ? `Delivery available (Rs${deliveryOptions.deliveryFee})`
         : 'Delivery available';
       options.push(deliveryText);
     }
@@ -516,8 +493,8 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
 
   navigateToProduct(productId: string) {
     this.router.navigate(['/products', productId]).then(() => {
-    window.location.reload();
-  });
+      window.location.reload();
+    });
   }
 
   get minDate(): string {
@@ -531,10 +508,9 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
     return startDate.toISOString().split('T')[0];
   }
 
-  getRentalDuration(){}
+  getRentalDuration() { }
 
-  navigateUserProfile(){
-    this.router.navigate(["/users",this.listing?.user.id]);
+  navigateUserProfile() {
+    this.router.navigate(["/users", this.listing?.user.id]);
   }
-
 }

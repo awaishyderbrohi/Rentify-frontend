@@ -1,0 +1,343 @@
+
+    <div class="min-h-screen bg-base-200 p-6">
+      <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+          <h1 class="text-4xl font-bold text-base-content mb-2">Admin Dashboard</h1>
+          <p class="text-base-content/70">Manage users, listings, and monitor platform activity</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="stat bg-base-100 rounded-box shadow-lg">
+            <div class="stat-figure text-primary">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-2.239"></path>
+              </svg>
+            </div>
+            <div class="stat-title">Total Users</div>
+            <div class="stat-value text-primary">{{ stats.totalUsers | number }}</div>
+            <div class="stat-desc">
+              <span class="text-success">{{ stats.userGrowth }}%</span> from last month
+            </div>
+          </div>
+
+          <div class="stat bg-base-100 rounded-box shadow-lg">
+            <div class="stat-figure text-secondary">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+              </svg>
+            </div>
+            <div class="stat-title">Active Listings</div>
+            <div class="stat-value text-secondary">{{ stats.totalListings | number }}</div>
+            <div class="stat-desc">{{ stats.activeUsers }} active owners</div>
+          </div>
+
+          <div class="stat bg-base-100 rounded-box shadow-lg">
+            <div class="stat-figure text-accent">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+              </svg>
+            </div>
+            <div class="stat-title">Monthly Revenue</div>
+            <div class="stat-value text-accent">${{ stats.monthlyRevenue | number }}</div>
+            <div class="stat-desc">{{ stats.totalRentals }} rentals this month</div>
+          </div>
+
+          <div class="stat bg-base-100 rounded-box shadow-lg">
+            <div class="stat-figure text-warning">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+            </div>
+            <div class="stat-title">Pending Reports</div>
+            <div class="stat-value text-warning">{{ stats.pendingReports | number }}</div>
+            <div class="stat-desc">{{ stats.totalReports }} total reports</div>
+          </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs tabs-boxed bg-base-100 mb-6 p-1 shadow-lg">
+          <button
+            *ngFor="let tab of tabs"
+            (click)="activeTab = tab.id"
+            class="tab"
+            [class.tab-active]="activeTab === tab.id"
+          >
+            {{ tab.label }}
+          </button>
+        </div>
+
+        <!-- Users Management -->
+        <div *ngIf="activeTab === 'users'" class="bg-base-100 rounded-box shadow-lg p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold">User Management</h2>
+            <div class="join">
+              <input
+                type="text"
+                placeholder="Search users..."
+                class="input input-bordered join-item w-64"
+                [(ngModel)]="userSearchTerm"
+                (ngModelChange)="searchUsers()"
+              />
+              <button class="btn flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-slate-800 to-slate-900 text-white  hover:from-slate-900 hover:to-slate-800 transition-all duration-200 font-medium hover-lift shadow-lg text-sm join-item">Search</button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="table table-zebra">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th>Listings</th>
+                  <th>Reports</th>
+                  <th>Joined</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let user of filteredUsers" class="hover">
+                  <td>
+                    <div class="flex items-center space-x-3">
+                      <div class="avatar placeholder">
+                        <div class="bg-neutral-focus text-neutral-content rounded-full w-12">
+                          <span>{{ user.firstName.charAt(0) + user.lastName.charAt(0) }}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="font-bold">{{ user.firstName }} {{ user.lastName }}</div>
+                        <div class="text-sm opacity-50" *ngIf="user.phoneNumber">{{ user.phoneNumber }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    {{ user.email }}
+                    <span *ngIf="user.emailVerified" class="badge badge-success badge-xs ml-2">Verified</span>
+                    <span *ngIf="!user.emailVerified" class="badge badge-warning badge-xs ml-2">Unverified</span>
+                  </td>
+                  <td>
+                    <span class="badge" [class]="getUserStatusClass(user.status)">
+                      {{ user.status | titlecase }}
+                    </span>
+                  </td>
+                  <td>{{ user.totalListings }}</td>
+                  <td>
+                    <span *ngIf="user.reportCount > 0" class="badge badge-error">{{ user.reportCount }}</span>
+                    <span *ngIf="user.reportCount === 0">0</span>
+                  </td>
+                  <td>{{ user.createdAt | date:'short' }}</td>
+                  <td>
+                    <div class="dropdown dropdown-end">
+                      <button class="btn btn-sm btn-ghost" tabindex="0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zM12 13a1 1 0 110-2 1 1 0 010 2zM12 20a1 1 0 110-2 1 1 0 010 2z"></path>
+                        </svg>
+                      </button>
+                      <ul class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
+                        <li><button (click)="viewUser(user)">View Details</button></li>
+                        <li *ngIf="user.status === 'active'"><button (click)="suspendUser(user)" class="text-warning">Suspend</button></li>
+                        <li *ngIf="user.status === 'suspended'"><button (click)="activateUser(user)" class="text-success">Activate</button></li>
+                        <li><button (click)="banUser(user)" class="text-error">Ban</button></li>
+                      </ul>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Listings Management -->
+        <div *ngIf="activeTab === 'listings'" class="bg-base-100 rounded-box shadow-lg p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold">Listing Management</h2>
+            <div class="join">
+              <input
+                type="text"
+                placeholder="Search listings..."
+                class="input input-bordered join-item w-64"
+                [(ngModel)]="listingSearchTerm"
+                (ngModelChange)="searchListings()"
+              />
+              <select class="select select-bordered join-item">
+                <option value="">All Categories</option>
+                <option value="electronics">Electronics</option>
+                <option value="tools">Tools</option>
+                <option value="vehicles">Vehicles</option>
+                <option value="furniture">Furniture</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="table table-zebra">
+              <thead>
+                <tr>
+                  <th>Listing</th>
+                  <th>Owner</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                  <th>Reports</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let listing of filteredListings" class="hover">
+                  <td>
+                    <div>
+                      <div class="font-bold">{{ listing.title }}</div>
+                      <div class="text-sm opacity-50">{{ listing.category | titlecase }}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div>
+                      <div class="font-medium">{{ listing.owner.firstName }} {{ listing.owner.lastName }}</div>
+                      <div class="text-sm opacity-50">{{ listing.owner.email }}</div>
+                    </div>
+                  </td>
+                  <td class="font-bold">Rs{{ listing.price }}</td>
+                  <td>
+                    <span class="badge" [class]="getListingStatusClass(listing.status)">
+                      {{ listing.status | titlecase }}
+                    </span>
+                  </td>
+                  <td>
+                    <span *ngIf="listing.reportCount > 0" class="badge badge-error">{{ listing.reportCount }}</span>
+                    <span *ngIf="listing.reportCount === 0">0</span>
+                  </td>
+                  <td>{{ listing.createdAt | date:'short' }}</td>
+                  <td>
+                    <div class="dropdown dropdown-end">
+                      <button class="btn btn-sm btn-ghost" tabindex="0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zM12 13a1 1 0 110-2 1 1 0 010 2zM12 20a1 1 0 110-2 1 1 0 010 2z"></path>
+                        </svg>
+                      </button>
+                      <ul class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
+                        <li><button (click)="viewListing(listing)">View Details</button></li>
+                        <li *ngIf="listing.status === 'active'"><button (click)="deactivateListing(listing)" class="text-warning">Deactivate</button></li>
+                        <li *ngIf="listing.status === 'inactive'"><button (click)="activateListing(listing)" class="text-success">Activate</button></li>
+                        <li><button (click)="banListing(listing)" class="text-error">Ban</button></li>
+                      </ul>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Activities -->
+        <div *ngIf="activeTab === 'activities'" class="bg-base-100 rounded-box shadow-lg p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold">Recent Activities</h2>
+            <select class="select select-bordered" [(ngModel)]="activityFilter" (ngModelChange)="filterActivities()">
+              <option value="">All Activities</option>
+              <option value="user_registration">User Registrations</option>
+              <option value="listing_created">Listings Created</option>
+              <option value="rental_completed">Rentals Completed</option>
+              <option value="report_submitted">Reports Submitted</option>
+            </select>
+          </div>
+
+          <div class="space-y-4">
+            <div *ngFor="let activity of filteredActivities" class="alert shadow-lg">
+              <div class="flex items-start space-x-4 w-full">
+                <div class="avatar placeholder">
+                  <div class="bg-base-300 text-base-content rounded-full w-10">
+                    <span class="text-sm">{{ activity.user.firstName.charAt(0) }}</span>
+                  </div>
+                </div>
+                <div class="flex-1">
+                  <div class="font-medium">{{ activity.description }}</div>
+                  <div class="text-sm opacity-70 mt-1">
+                    by {{ activity.user.firstName }} {{ activity.user.lastName }} •
+                    {{ activity.timestamp | date:'short' }}
+                  </div>
+                </div>
+                <div class="badge" [class]="getActivityBadgeClass(activity.type)">
+                  {{ activity.type.replace('_', ' ') | titlecase }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reports -->
+        <div *ngIf="activeTab === 'reports'" class="bg-base-100 rounded-box shadow-lg p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold">Reports Management</h2>
+            <select class="select select-bordered" [(ngModel)]="reportFilter" (ngModelChange)="filterReports()">
+              <option value="">All Reports</option>
+              <option value="pending">Pending</option>
+              <option value="resolved">Resolved</option>
+              <option value="dismissed">Dismissed</option>
+            </select>
+          </div>
+
+          <div class="grid gap-4">
+            <div *ngFor="let report of filteredReports" class="card bg-base-200 shadow-lg">
+              <div class="card-body">
+                <div class="flex justify-between items-start">
+                  <div class="flex-1">
+                    <div class="flex items-center space-x-2 mb-2">
+                      <span class="badge badge-outline">{{ report.type | titlecase }}</span>
+                      <span class="badge" [class]="getReportStatusClass(report.status)">
+                        {{ report.status | titlecase }}
+                      </span>
+                    </div>
+                    <h3 class="font-bold text-lg">{{ report.reason }}</h3>
+                    <p class="text-sm opacity-70 mb-3">{{ report.description }}</p>
+                    <div class="text-sm">
+                      <span class="font-medium">Reported by:</span>
+                      {{ report.reportedBy.firstName }} {{ report.reportedBy.lastName }}
+                      <span class="mx-2">•</span>
+                      <span>{{ report.createdAt | date:'short' }}</span>
+                    </div>
+                  </div>
+                  <div *ngIf="report.status === 'pending'" class="flex space-x-2">
+                    <button (click)="resolveReport(report)" class="btn btn-success btn-sm">Resolve</button>
+                    <button (click)="dismissReport(report)" class="btn btn-warning btn-sm">Dismiss</button>
+                    <button (click)="viewReportDetails(report)" class="btn btn-ghost btn-sm">Details</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analytics -->
+        <div *ngIf="activeTab === 'analytics'" class="space-y-6">
+          <!-- Revenue Chart -->
+          <div class="bg-base-100 rounded-box shadow-lg p-6">
+            <h3 class="text-xl font-bold mb-4">Revenue Analytics</h3>
+            <div class="h-64 flex items-center justify-center bg-base-200 rounded">
+              <p class="text-base-content/50">Chart implementation would go here using Chart.js or similar</p>
+            </div>
+          </div>
+
+          <!-- User Growth Chart -->
+          <div class="bg-base-100 rounded-box shadow-lg p-6">
+            <h3 class="text-xl font-bold mb-4">User Growth</h3>
+            <div class="h-64 flex items-center justify-center bg-base-200 rounded">
+              <p class="text-base-content/50">User growth chart would go here</p>
+            </div>
+          </div>
+
+          <!-- Category Performance -->
+          <div class="bg-base-100 rounded-box shadow-lg p-6">
+            <h3 class="text-xl font-bold mb-4">Category Performance</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div *ngFor="let category of categoryStats" class="stat bg-base-200 rounded-box">
+                <div class="stat-title">{{ category.name }}</div>
+                <div class="stat-value text-sm">{{ category.listings }} listings</div>
+                <div class="stat-desc">{{ category.revenue | currency }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>

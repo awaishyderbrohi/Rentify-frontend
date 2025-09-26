@@ -11,6 +11,7 @@ import { ProductPageComponent } from './pages/product/product.component';
 import { SearchResultsComponent } from './pages/search-result/search-result.component';
 import { ProductsByCategoryComponent } from './pages/category-products/category-products.component';
 import { VisitorUserProfileComponent } from './pages/visitor-user-profile/visitor-user-profile.component';
+import { AdminDashboardComponent } from './pages/admin-profile/admin-profile.component';
 
 
 export const routes: Routes = [
@@ -41,6 +42,7 @@ export const routes: Routes = [
     ]
   },
    {path:"search",component:SearchResultsComponent},
+   {path:"adminstrator", component:AdminDashboardComponent},
   { path:'products/:id',component:ProductPageComponent},
   { path:'products/category/:category',component:ProductsByCategoryComponent},
    { path:'users/:id',component:VisitorUserProfileComponent},

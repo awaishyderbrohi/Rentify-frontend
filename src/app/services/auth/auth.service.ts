@@ -62,11 +62,7 @@ export class AuthService {
     return this.http.get<BaseResponse<string>>(`${this.BASE_URL}/auth/send-verification-email`,{withCredentials:true});
   }
 
-    getUserById(id:string): Observable<User>{
-    return this.http.get(`${this.BASE_URL}/${id}`);
-  }
-
-  getAllUserListingsById(id:string){}
+ 
 
 
 }

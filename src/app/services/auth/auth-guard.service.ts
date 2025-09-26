@@ -3,6 +3,8 @@ import { AuthService } from './auth.service';
 import {  CanActivate,  Router, UrlTree  } from '@angular/router';
 import { catchError, map, Observable, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { User } from '../../models/User.model';
+import { httpResource } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +20,7 @@ export class AuthGuardService implements CanActivate{
       catchError(() => of(this.router.parseUrl('/login')))
     )
   }
+
 
 
 

@@ -7,8 +7,6 @@
   <!-- Product Content -->
   <div *ngIf="!isLoading && listing" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-
-
     <!-- Main Product Section -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
 
@@ -25,7 +23,6 @@
           {{ listing.brand }}
         </div>
       </div>
-
     </div>
 
     <!-- Main Image Container with Fixed Dimensions -->
@@ -139,7 +136,7 @@
             <div class="space-y-3">
               <button *ngIf="listing.status === 'ACTIVE'"
                       (click)="openBookingForm()"
-                      class="btn btn-neutral btn-lg btn-block">
+                      class="btn bg-slate-700 hover:bg-slate-600 text-white border-slate-700 btn-lg  w-full">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
@@ -284,24 +281,28 @@
       <!-- Main Content -->
       <div class="lg:col-span-2 space-y-8">
 
-        <!-- Description -->
+        <!-- Combined Description & Specifications -->
         <div class="card bg-base-100 shadow-xl">
           <div class="card-body">
+            <!-- Description Section -->
             <h2 class="card-title text-2xl mb-4 flex items-center">
               <svg class="h-6 w-6 mr-2 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               Description
             </h2>
-            <div class="prose prose-base max-w-none text-base-content">
+            <div class="prose prose-base max-w-none text-base-content mb-8">
               <p class="whitespace-pre-wrap leading-relaxed">{{ listing.description }}</p>
             </div>
-          </div>
-        </div>
 
-        <!-- Specifications -->
-        <div class="card bg-base-100 shadow-xl">
-          <div class="card-body">
+            <!-- Divider -->
+            <div class="divider">
+              <svg class="h-5 w-5 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+
+            <!-- Specifications Section -->
             <h2 class="card-title text-2xl mb-6 flex items-center">
               <svg class="h-6 w-6 mr-2 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -472,152 +473,153 @@
             </div>
           </div>
         </div>
-
-
-
-  <!-- Enhanced Booking Modal -->
-  <div *ngIf="showBookingForm" class="modal modal-open">
-    <div class="modal-box w-11/12 max-w-lg">
-      <div class="flex justify-between items-center mb-6">
-        <div>
-          <h3 class="font-bold text-2xl text-base-content">Book {{ listing?.title }}</h3>
-          <p class="text-base-content/70 text-sm mt-1">Fill out the details below to send a booking request</p>
-        </div>
-        <button (click)="showBookingForm = false" class="btn btn-sm btn-circle btn-ghost">
-          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
       </div>
-
-      <form (ngSubmit)="submitBookingRequest()" class="space-y-6">
-        <!-- Date Selection -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text font-semibold">Start Date</span>
-              <span class="label-text-alt text-error">*</span>
-            </label>
-            <input type="date"
-                   [(ngModel)]="bookingRequest.startDate"
-                   name="startDate"
-                   [min]="minDate"
-                   (change)="calculateTotal()"
-                   class="input input-bordered w-full focus:input-neutral"
-                   required>
-          </div>
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text font-semibold">End Date</span>
-              <span class="label-text-alt text-error">*</span>
-            </label>
-            <input type="date"
-                   [(ngModel)]="bookingRequest.endDate"
-                   name="endDate"
-                   [min]="minEndDate"
-                   (change)="calculateTotal()"
-                   class="input input-bordered w-full focus:input-neutral"
-                   required>
-          </div>
-        </div>
-
-        <!-- Delivery Option -->
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text font-semibold">Delivery Option</span>
-            <span class="label-text-alt text-error">*</span>
-          </label>
-          <div class="space-y-3">
-            <label *ngIf="listing?.deliveryOptions?.pickup"
-                   class="label cursor-pointer justify-start p-4 bg-base-50 rounded-lg">
-              <input type="radio"
-                     [(ngModel)]="bookingRequest.deliveryOption"
-                     name="deliveryOption"
-                     value="pickup"
-                     (change)="calculateTotal()"
-                     class="radio radio-neutral mr-4">
-              <div class="flex-1">
-                <div class="flex items-center gap-2">
-                  <svg class="w-5 h-5 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span class="label-text font-medium">Self Pickup</span>
-                  <div class="badge badge-success badge-sm">Free</div>
-                </div>
-                <p class="text-xs text-base-content/60 mt-1">Pick up the item from seller's location</p>
-              </div>
-            </label>
-            <label *ngIf="listing?.deliveryOptions?.delivery"
-                   class="label cursor-pointer justify-start p-4 bg-base-50 rounded-lg">
-              <input type="radio"
-                     [(ngModel)]="bookingRequest.deliveryOption"
-                     name="deliveryOption"
-                     value="delivery"
-                     (change)="calculateTotal()"
-                     class="radio radio-neutral mr-4">
-              <div class="flex-1">
-                <div class="flex items-center gap-2">
-                  <svg class="w-5 h-5 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2v0M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                  </svg>
-                  <span class="label-text font-medium">Home Delivery</span>
-                  <div class="badge badge-neutral badge-sm">
-                    {{ listing?.deliveryOptions?.deliveryFee ? 'Rs' + listing?.deliveryOptions?.deliveryFee : 'Contact seller' }}
-                  </div>
-                </div>
-                <p class="text-xs text-base-content/60 mt-1">Item will be delivered to your address</p>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        <!-- Message -->
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text font-semibold">Message</span>
-            <span class="label-text-alt text-base-content/60">Optional</span>
-          </label>
-          <textarea [(ngModel)]="bookingRequest.message"
-                    name="message"
-                    rows="4"
-                    placeholder="Any special requirements, questions, or additional information..."
-                    class="textarea textarea-bordered focus:textarea-neutral resize-none"></textarea>
-        </div>
-
-        <!-- Total Cost Breakdown -->
-        <div *ngIf="bookingRequest.totalAmount == 0" class="alert bg-neutral/10 border-neutral/20">
-          <div class="w-full">
-            <div class="flex justify-between items-center mb-2">
-              <span class="font-medium">Rental Cost</span>
-              <span>Rs{{ bookingRequest.totalAmount - (listing.price || 0) }}</span>
-            </div>
-            <div *ngIf="bookingRequest.deliveryOption === 'delivery' && listing?.price"
-                 class="flex justify-between items-center mb-2">
-              <span class="font-medium">Delivery Fee</span>
-              <span>Rs{{ listing.price }}</span>
-            </div>
-            <div class="divider my-2"></div>
-            <div class="flex justify-between items-center">
-              <span class="font-bold text-lg">Total Amount </span>
-              <span class="font-bold text-xl text-neutral"> Rs{{ bookingRequest.totalAmount }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="modal-action">
-          <button type="button" (click)="showBookingForm = false" class="btn btn-ghost">
-            Cancel
-          </button>
-          <button type="submit" class="btn btn-neutral btn-wide">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
-            Send Booking Request
-          </button>
-        </div>
-      </form>
     </div>
-    <div class="modal-backdrop" (click)="showBookingForm = false"></div>
+
+    <!-- Enhanced Booking Modal -->
+    <div *ngIf="showBookingForm" class="modal modal-open">
+      <div class="modal-box w-11/12 max-w-lg">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h3 class="font-bold text-2xl text-base-content">Book {{ listing?.title }}</h3>
+            <p class="text-base-content/70 text-sm mt-1">Fill out the details below to send a booking request</p>
+          </div>
+          <button (click)="showBookingForm = false" class="btn btn-sm btn-circle btn-ghost">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form (ngSubmit)="submitBookingRequest()" class="space-y-6">
+          <!-- Date Selection -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-semibold">Start Date</span>
+                <span class="label-text-alt text-error">*</span>
+              </label>
+              <input type="date"
+                     [(ngModel)]="bookingRequest.startDate"
+                     name="startDate"
+                     [min]="minDate"
+                     (change)="calculateTotal()"
+                     class="input input-bordered w-full focus:input-neutral"
+                     required>
+            </div>
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-semibold">End Date</span>
+                <span class="label-text-alt text-error">*</span>
+              </label>
+              <input type="date"
+                     [(ngModel)]="bookingRequest.endDate"
+                     name="endDate"
+                     [min]="minEndDate"
+                     (change)="calculateTotal()"
+                     class="input input-bordered w-full focus:input-neutral"
+                     required>
+            </div>
+          </div>
+
+          <!-- Delivery Option -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-semibold">Delivery Option</span>
+              <span class="label-text-alt text-error">*</span>
+            </label>
+            <div class="space-y-3">
+              <label *ngIf="listing?.deliveryOptions?.pickup"
+                     class="label cursor-pointer justify-start p-4 bg-base-50 rounded-lg">
+                <input type="radio"
+                       [(ngModel)]="bookingRequest.deliveryOption"
+                       name="deliveryOption"
+                       value="pickup"
+                       (change)="calculateTotal()"
+                       class="radio radio-neutral mr-4">
+                <div class="flex-1">
+                  <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span class="label-text font-medium">Self Pickup</span>
+                    <div class="badge badge-success badge-sm">Free</div>
+                  </div>
+                  <p class="text-xs text-base-content/60 mt-1">Pick up the item from seller's location</p>
+                </div>
+              </label>
+              <label *ngIf="listing?.deliveryOptions?.delivery"
+                     class="label cursor-pointer justify-start p-4 bg-base-50 rounded-lg">
+                <input type="radio"
+                       [(ngModel)]="bookingRequest.deliveryOption"
+                       name="deliveryOption"
+                       value="delivery"
+                       (change)="calculateTotal()"
+                       class="radio radio-neutral mr-4">
+                <div class="flex-1">
+                  <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2v0M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                    </svg>
+                    <span class="label-text font-medium">Home Delivery</span>
+                    <div class="badge badge-neutral badge-sm">
+                      {{ listing?.deliveryOptions?.deliveryFee ? 'Rs' + listing?.deliveryOptions?.deliveryFee : 'Contact seller' }}
+                    </div>
+                  </div>
+                  <p class="text-xs text-base-content/60 mt-1">Item will be delivered to your address</p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Message -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-semibold">Message</span>
+              <span class="label-text-alt text-base-content/60">Optional</span>
+            </label>
+            <textarea [(ngModel)]="bookingRequest.message"
+                      name="message"
+                      rows="4"
+                      placeholder="Any special requirements, questions, or additional information..."
+                      class="textarea textarea-bordered focus:textarea-neutral resize-none"></textarea>
+          </div>
+
+          <!-- Total Cost Breakdown -->
+          <div *ngIf="bookingRequest.totalAmount == 0" class="alert bg-neutral/10 border-neutral/20">
+            <div class="w-full">
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-medium">Rental Cost</span>
+                <span>Rs{{ bookingRequest.totalAmount - (listing.price || 0) }}</span>
+              </div>
+              <div *ngIf="bookingRequest.deliveryOption === 'delivery' && listing?.price"
+                   class="flex justify-between items-center mb-2">
+                <span class="font-medium">Delivery Fee</span>
+                <span>Rs{{ listing.price }}</span>
+              </div>
+              <div class="divider my-2"></div>
+              <div class="flex justify-between items-center">
+                <span class="font-bold text-lg">Total Amount </span>
+                <span class="font-bold text-xl text-neutral"> Rs{{ bookingRequest.totalAmount }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="modal-action">
+            <button type="button" (click)="showBookingForm = false" class="btn btn-ghost">
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-neutral btn-wide">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+              Send Booking Request
+            </button>
+          </div>
+        </form>
+      </div>
+      <div class="modal-backdrop" (click)="showBookingForm = false"></div>
+    </div>
   </div>
 </div>

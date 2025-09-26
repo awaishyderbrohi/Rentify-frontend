@@ -24,7 +24,5 @@ export type User = {
   address?:Address;
   dateOfBirth?:Date,
   website?:string,
-  company?:string,
-  profession?:string,
 
 }

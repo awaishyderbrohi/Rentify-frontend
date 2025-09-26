@@ -3,4 +3,5 @@ export interface Location {
   city?:string;
   latitude?:number;
   longtitude?:number;
+
 }

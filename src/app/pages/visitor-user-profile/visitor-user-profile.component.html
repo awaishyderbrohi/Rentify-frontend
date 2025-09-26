@@ -1,215 +1,355 @@
-<div *ngIf="loading" class="flex justify-center items-center min-h-screen">
-      <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
-    </div>
+<!-- Loading State -->
+<div *ngIf="loading" class="flex justify-center items-center min-h-screen bg-gray-50">
+  <div class="flex flex-col items-center gap-4">
+    <span class="loading loading-spinner loading-lg text-slate-600"></span>
+    <p class="text-gray-600">Loading profile...</p>
+  </div>
+</div>
 
-    <div *ngIf="error" class="max-w-md mx-auto mt-8 p-4 sm:p-6 bg-red-50 border border-red-200 rounded-lg">
-      <div class="flex items-center">
-        <svg class="w-6 h-6 text-red-500 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-        </svg>
-        <div class="flex-1">
-          <h3 class="text-red-800 font-medium text-sm sm:text-base">{{ error }}</h3>
-          <button
-            (click)="retry()"
-            class="text-red-600 hover:text-red-700 text-sm font-medium mt-1">
-            Try again
-          </button>
-        </div>
-      </div>
+<!-- Error State -->
+<div *ngIf="error" class="max-w-2xl mx-auto mt-8">
+  <div class="alert alert-error shadow-lg bg-red-50 border border-red-200">
+    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <div>
+      <h3 class="font-bold text-red-800">Error Loading Profile</h3>
+      <div class="text-xs text-red-700">{{ error }}</div>
     </div>
+    <button class="btn btn-sm btn-outline border-red-300 text-red-600 hover:bg-red-600 hover:text-white" (click)="retry()">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      Retry
+    </button>
+  </div>
+</div>
 
-    <div *ngIf="!loading && !error && user" class="space-y-4 sm:space-y-6 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- Profile Header -->
-      <div class="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-        <div class="flex flex-col sm:flex-row items-start space-y-6 sm:space-y-0 sm:space-x-8 lg:space-x-12">
-          <!-- Avatar Section -->
-          <div class="flex-shrink-0 mx-auto sm:mx-0">
-            <div class="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 p-0.5">
-              <div class="w-full h-full rounded-full border-2 border-white relative overflow-hidden">
-                <img
-                  *ngIf="user?.profilePicUrl; else initials"
-                  [src]="user?.profilePicUrl"
-                  [alt]="user?.firstName + ' ' + user?.lastName"
-                  class="w-full h-full object-cover"
-                />
-                <ng-template #initials>
-                  <div class="w-full h-full bg-gray-100 flex items-center justify-center text-base sm:text-lg lg:text-xl font-bold text-gray-600">
-                    {{ getInitials() }}
-                  </div>
-                </ng-template>
-              </div>
+<!-- Main Content -->
+<div *ngIf="!loading && !error && user" class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+  <div class="container mx-auto px-4 py-8 max-w-7xl">
+
+    <!-- Hero Section -->
+    <div class="hero bg-gradient-to-r from-slate-800 to-gray-900 rounded-3xl shadow-2xl mb-8 text-white">
+      <div class="hero-content flex-col lg:flex-row-reverse gap-8 py-12">
+        <!-- Profile Image -->
+        <div class="relative">
+          <div class="avatar placeholder">
+            <div class="bg-white text-gray-800 rounded-full w-32 h-32 ring ring-gray-200 ring-offset-4 ring-offset-slate-800 shadow-xl">
+              <img *ngIf="user?.profilePicUrl; else initials"
+                   [src]="user?.profilePicUrl"
+                   [alt]="user?.firstName + ' ' + user?.lastName"
+                   class="rounded-full w-full h-full object-cover" />
+              <ng-template #initials>
+                <span class="text-4xl font-bold">{{ getInitials() }}</span>
+              </ng-template>
             </div>
           </div>
 
-          <div class="flex-1 text-center sm:text-left w-full sm:w-auto">
-            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3 space-y-2 sm:space-y-0">
-              <div class="flex-1">
-                <h2 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1">{{ user?.firstName }} {{ user?.lastName }}</h2>
-                <p class="text-xs sm:text-sm text-gray-600 break-all sm:break-normal">{{ getPublicEmail() }}</p>
-              </div>
-              <div class="tooltip tooltip-bottom flex justify-center sm:justify-end space-x-2 mt-2 sm:mt-0 flex-shrink-0">
-                <button
-                  class="tooltip tooltip-bottom inline-flex items-center px-2 sm:px-3 py-1.5 border border-blue-300 rounded-md text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors"
-                  (click)="onContactUser()"
-                  data-tip="Discus Listing With User">
-                  <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                  </svg>
-                  <span class="hidden xs:inline">Contact</span>
-                </button>
-               <button
-                class="tooltip tooltip-bottom inline-flex items-center px-2 sm:px-3 py-1.5 border border-gray-300 rounded-md text-s font-medium text-gray-900 bg-white hover:bg-gray-50 transition-colors"
-                data-tip="Report this user"
-              (click)="onReportUser()">
+          <!-- Online Status -->
+          <div *ngIf="isOnline" class="absolute -bottom-2 -right-2">
+            <div class="badge bg-green-600 text-white border-green-600 gap-1 shadow-lg">
+              <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              Online
+            </div>
+          </div>
+        </div>
 
-              <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01"></path>
+        <!-- Profile Info -->
+        <div class="text-center lg:text-left flex-1">
+          <h1 class="text-4xl lg:text-5xl font-bold mb-2">{{ user?.firstName }} {{ user?.lastName }}</h1>
+          <p class="text-lg text-gray-200 mb-4">{{ getPublicEmail() }}</p>
+
+          <!-- Stats Row -->
+          <div class="stats stats-horizontal bg-white/20 backdrop-blur-sm shadow-lg mb-6 border border-gray-300">
+            <div class="stat place-items-center bg-transparent">
+              <div class="stat-title text-gray-200">Rating</div>
+              <div class="stat-value text-yellow-400">{{ user?.totalRating || '0' }}</div>
+              <div class="stat-desc text-gray-200">{{ user?.totalReviews }} reviews</div>
+            </div>
+            <div class="stat place-items-center bg-transparent">
+              <div class="stat-title text-gray-200">Response Rate</div>
+              <div class="stat-value text-green-400">{{ user?.responseRate || '0' }}%</div>
+            </div>
+            <div class="stat place-items-center bg-transparent">
+              <div class="stat-title text-gray-200">Active Listings</div>
+              <div class="stat-value text-blue-400">{{ stats.active }}</div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+            <button class="btn btn-lg bg-slate-700 hover:bg-slate-600 text-white border-slate-700 shadow-lg" (click)="onContactUser()">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
-              <span class="hidden xs:inline">Report</span>
+              Contact User
             </button>
+            <button class="btn btn-lg btn-outline border-gray-300 text-gray-200 hover:bg-gray-100 hover:text-gray-800" (click)="onReportUser()">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              Report User
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
+    <!-- User Info Card -->
+    <div class="card bg-white shadow-xl mb-8 border border-gray-200">
+      <div class="card-body">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="card-title text-2xl text-gray-900">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            About
+          </h2>
+          <div class="flex gap-2">
+            <div *ngIf="user?.nICVerified" class="badge bg-green-100 text-green-800 border-green-200 gap-2 text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4" />
+              </svg>
+              Verified
+            </div>
+            <div *ngIf="user?.createdAt" class="badge bg-gray-100 text-gray-800 border-gray-200 gap-2 text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Joined {{ user.createdAt }}
+            </div>
+          </div>
+        </div>
+
+        <div class="prose prose-lg max-w-none">
+          <p *ngIf="user?.bio" class="text-gray-700">{{ user?.bio }}</p>
+          <div *ngIf="!user?.bio" class="text-center py-8">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            <p class="text-gray-500 text-lg">No biography available</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics Dashboard -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <!-- Performance Stats -->
+      <div class="card bg-gradient-to-br from-slate-50 to-gray-50 shadow-xl border border-gray-200">
+        <div class="card-body">
+          <h3 class="card-title text-xl mb-6 text-gray-900">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            Performance Metrics
+          </h3>
+
+          <div class="space-y-4">
+            <div class="flex justify-between items-center p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+              <div>
+                <p class="text-sm text-gray-600">Active Listings</p>
+                <p class="text-2xl font-bold text-slate-800">{{ stats.active }}</p>
               </div>
             </div>
 
-            <!-- Badges and Info -->
-            <div class="flex flex-wrap justify-center sm:justify-start items-center gap-2 sm:gap-3 mb-3 text-xs">
-              <div *ngIf="user?.createdAt" class="flex items-center space-x-1 text-gray-600">
-                <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                <span class="whitespace-nowrap">{{ user.createdAt }}</span>
-              </div>
-              <div *ngIf="user?.nICVerified" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 whitespace-nowrap">
-                <svg class="w-3 h-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>
-                </svg>
-                Verified
-              </div>
-              <div *ngIf="isOnline" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 whitespace-nowrap">
-                <div class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1 animate-pulse flex-shrink-0"></div>
-                Online
+            <div class="flex justify-between items-center p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+              <div>
+                <p class="text-sm text-gray-600">Rented Out</p>
+                <p class="text-2xl font-bold text-green-600">{{ stats.rented }}</p>
               </div>
             </div>
 
-            <!-- Rating and Stats -->
-            <div class="flex flex-wrap justify-center sm:justify-start items-center gap-3 sm:gap-4 mb-3 text-sm">
-              <div *ngIf="user?.totalRating" class="flex items-center space-x-1">
-                <svg class="w-4 h-4 text-yellow-400 fill-current flex-shrink-0" viewBox="0 0 24 24">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
-                </svg>
-                <span class="font-semibold text-gray-900">{{ user?.totalRating }}</span>
-                <span class="text-gray-600 whitespace-nowrap">({{ user?.totalReviews }})</span>
-              </div>
-              <div *ngIf="user?.responseRate" class="text-gray-600">
-                <span class="font-semibold text-gray-900">{{ user?.responseRate }}%</span> response
+            <div class="flex justify-between items-center p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+              <div>
+                <p class="text-sm text-gray-600">Response Rate</p>
+                <p class="text-2xl font-bold text-amber-600">{{ user?.responseRate || 0 }}%</p>
               </div>
             </div>
-
-            <p *ngIf="user?.bio" class="text-xs sm:text-sm text-gray-700 leading-relaxed line-clamp-3 sm:line-clamp-2">{{ user?.bio }}</p>
-            <p *ngIf="!user?.bio" class="text-xs sm:text-sm text-gray-500 italic">No bio available</p>
           </div>
         </div>
       </div>
 
-      <!-- Quick Stats -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div class="bg-white rounded-lg shadow-sm border p-3 sm:p-4 text-center">
-          <div class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{{ stats.active }}</div>
-          <div class="text-xs text-gray-600">Active</div>
-        </div>
-        <div class="bg-white rounded-lg shadow-sm border p-3 sm:p-4 text-center">
-          <div class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{{ stats.rented }}</div>
-          <div class="text-xs text-gray-600">Rented</div>
-        </div>
-        <div class="bg-white rounded-lg shadow-sm border p-3 sm:p-4 text-center">
-          <div class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{{ user?.totalRating || '0' }}</div>
-          <div class="text-xs text-gray-600">Rating</div>
-        </div>
-        <div class="bg-white rounded-lg shadow-sm border p-3 sm:p-4 text-center">
-          <div class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{{ user?.totalReviews || '0' }}</div>
-          <div class="text-xs text-gray-600">Reviews</div>
+      <!-- Rating Breakdown -->
+      <div class="card bg-gradient-to-br from-gray-50 to-slate-50 shadow-xl border border-gray-200">
+        <div class="card-body">
+          <h3 class="card-title text-xl mb-6 text-gray-900">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+            </svg>
+            Rating Overview
+          </h3>
+
+          <div class="text-center mb-6">
+            <div class="text-5xl font-bold text-amber-600 mb-2">{{ user?.totalRating || '0' }}</div>
+            <div class="rating rating-lg">
+              <input *ngFor="let star of getStarArray(user?.totalRating || 0)" type="radio" class="mask mask-star-2 bg-amber-500" disabled checked />
+            </div>
+            <p class="text-sm text-gray-600 mt-2">Based on {{ user?.totalReviews || 0 }} reviews</p>
+          </div>
+
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <span class="text-sm w-8 text-gray-700">5★</span>
+              <progress class="progress bg-gray-200 flex-1" style="color: #d97706;" value="70" max="100"></progress>
+              <span class="text-sm text-gray-600">70%</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-sm w-8 text-gray-700">4★</span>
+              <progress class="progress bg-gray-200 flex-1" style="color: #d97706;" value="20" max="100"></progress>
+              <span class="text-sm text-gray-600">20%</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-sm w-8 text-gray-700">3★</span>
+              <progress class="progress bg-gray-200 flex-1" style="color: #d97706;" value="5" max="100"></progress>
+              <span class="text-sm text-gray-600">5%</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-sm w-8 text-gray-700">2★</span>
+              <progress class="progress bg-gray-200 flex-1" style="color: #d97706;" value="3" max="100"></progress>
+              <span class="text-sm text-gray-600">3%</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-sm w-8 text-gray-700">1★</span>
+              <progress class="progress bg-gray-200 flex-1" style="color: #d97706;" value="2" max="100"></progress>
+              <span class="text-sm text-gray-600">2%</span>
+            </div>
+          </div>
         </div>
       </div>
+    </div>
 
-      <!-- Recent Reviews Section -->
-      <div *ngIf="recentReviews && recentReviews.length > 0" class="bg-white rounded-lg shadow-sm border p-4 sm:p-5">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm sm:text-base font-semibold text-gray-900">Recent Reviews</h3>
-          <button
-            (click)="onViewAllReviews()"
-            class="text-blue-600 hover:text-blue-700 text-xs font-medium">
-            View all
+    <!-- Recent Reviews -->
+    <div *ngIf="recentReviews && recentReviews.length > 0" class="card bg-white shadow-xl mb-8 border border-gray-200">
+      <div class="card-body">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="card-title text-xl text-gray-900">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+            </svg>
+            Recent Reviews
+          </h3>
+          <button class="btn btn-outline border-gray-300 text-gray-700 hover:bg-gray-100 btn-sm" (click)="onViewAllReviews()">
+            View All Reviews
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
           </button>
         </div>
-        <div class="space-y-3">
-          <div *ngFor="let review of recentReviews" class="border-b border-gray-100 last:border-b-0 pb-3 last:pb-0">
-            <div class="flex items-start space-x-3">
-              <div class="flex-shrink-0">
-                <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-                  <span class="text-xs font-medium text-gray-600">{{ getReviewerInitials(review) }}</span>
-                </div>
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mb-1">
-                  <span class="font-medium text-gray-900 text-sm truncate">{{ review.reviewerName }}</span>
-                  <div class="flex items-center space-x-1">
-                    <div class="flex items-center">
-                      <svg *ngFor="let star of getStarArray(review.rating)"
-                           class="w-3 h-3 text-yellow-400 fill-current" viewBox="0 0 24 24">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
-                      </svg>
-                    </div>
-                    <span class="text-xs text-gray-500">{{ formatDate(review.createdAt) }}</span>
+
+        <div class="space-y-4">
+          <div *ngFor="let review of recentReviews" class="card bg-gray-50 shadow-sm border border-gray-200">
+            <div class="card-body p-4">
+              <div class="flex items-start gap-4">
+                <div class="avatar placeholder">
+                  <div class="bg-slate-600 text-white rounded-full w-12 h-12">
+                    <span class="text-sm font-bold">{{ getReviewerInitials(review) }}</span>
                   </div>
                 </div>
-                <p class="text-gray-700 text-sm line-clamp-2 sm:line-clamp-3">{{ review.comment }}</p>
+
+                <div class="flex-1">
+                  <div class="flex justify-between items-start mb-2">
+                    <div>
+                      <h4 class="font-semibold text-gray-900">{{ review.reviewerName }}</h4>
+                      <div class="rating rating-sm">
+                        <input *ngFor="let star of getStarArray(review.rating)" type="radio" class="mask mask-star-2 bg-amber-500" disabled checked />
+                      </div>
+                    </div>
+                    <div class="badge bg-gray-200 text-gray-700 border-gray-300">{{ formatDate(review.createdAt) }}</div>
+                  </div>
+                  <p class="text-gray-700">{{ review.comment }}</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Active Listings Preview -->
-      <div *ngIf="activeListings && activeListings.length > 0" class="bg-white rounded-lg shadow-sm border p-4 sm:p-5">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm sm:text-base font-semibold text-gray-900">Active Listings</h3>
-          <button
-            (click)="onViewAllListings()"
-            class="text-blue-600 hover:text-blue-700 text-xs font-medium">
-            View all ({{ stats.active }})
+    <!-- Active Listings -->
+    <div *ngIf="activeListings && activeListings.length > 0" class="card bg-white shadow-xl border border-gray-200">
+      <div class="card-body">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="card-title text-xl text-gray-900">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            Active Listings
+            <div class="badge bg-slate-600 text-white border-slate-600">{{ stats.active }}</div>
+          </h3>
+          <button class="btn btn-outline border-gray-300 text-gray-700 hover:bg-gray-100 btn-sm" (click)="onViewAllListings()">
+            View All Listings
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
           </button>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           <div *ngFor="let listing of activeListings.slice(0, 6)"
-               class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200 cursor-pointer"
+               class="card bg-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group border border-gray-200"
                (click)="onViewListing(listing)">
-            <div class="aspect-w-16 aspect-h-9 bg-gray-200">
+            <figure class="relative overflow-hidden">
               <img *ngIf="listing.images && listing.images.length > 0; else noImage"
                    [src]="listing.images[0]"
                    [alt]="listing.title"
-                   class="w-full h-20 sm:h-24 object-cover">
+                   class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
               <ng-template #noImage>
-                <div class="w-full h-20 sm:h-24 bg-gray-200 flex items-center justify-center">
-                  <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                <div class="w-full h-48 bg-gray-100 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
               </ng-template>
-            </div>
-            <div class="p-3">
-              <h4 class="font-medium text-gray-900 mb-1 truncate text-sm">{{ listing.title }}</h4>
-              <p class="text-xs text-gray-600 mb-2 truncate">{{ listing.address }}</p>
-              <div class="flex items-center justify-between">
-                <p class="text-sm font-semibold text-gray-900">${{ listing.priceType }}/day</p>
-                <div *ngIf="listing.rating" class="flex items-center">
-                  <svg class="w-3 h-3 text-yellow-400 fill-current mr-1" viewBox="0 0 24 24">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+              <div class="absolute top-4 right-4">
+                <div class="badge bg-green-100 text-green-800 border-green-200">Active</div>
+              </div>
+            </figure>
+
+            <div class="card-body">
+              <h4 class="card-title text-lg text-gray-900">{{ listing.title }}</h4>
+              <p class="text-gray-600 text-sm mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {{ listing.address }}
+              </p>
+
+              <div class="flex justify-between items-center">
+                <div class="text-xl font-bold text-slate-800">${{ listing.priceType }}/day</div>
+                <div *ngIf="listing.rating" class="flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-500 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                   </svg>
-                  <span class="text-xs text-gray-600">{{ listing.rating }}</span>
+                  <span class="text-sm font-medium text-gray-700">{{ listing.rating }}</span>
                 </div>
+              </div>
+
+              <div class="card-actions justify-end mt-4">
+                <button class="btn bg-slate-700 hover:bg-slate-600 text-white border-slate-700 btn-sm">
+                  View Details
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Empty State for Listings -->
+    <div *ngIf="!activeListings || activeListings.length === 0" class="card bg-white shadow-xl border border-gray-200">
+      <div class="card-body text-center py-16">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+        <h3 class="text-2xl font-bold mb-2 text-gray-900">No Active Listings</h3>
+        <p class="text-gray-600">This user currently has no active listings available.</p>
+      </div>
+    </div>
+  </div>
+</div>

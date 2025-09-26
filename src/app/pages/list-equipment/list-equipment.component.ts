@@ -1,4 +1,4 @@
-import { Component, signal, computed, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy, NgZone } from '@angular/core';
+import { Component, signal, computed, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { ListingsService } from '../../services/listings/listings.service';
@@ -6,7 +6,6 @@ import { ToasterService } from '../../services/toaster/toaster.service';
 import { User } from '../../models/User.model';
 import { AuthService } from '../../services/auth/auth.service';
 import { last, takeUntil } from 'rxjs';
-import { Users } from 'lucide-angular';
 
 // Interfaces
 export interface ProductImage {
@@ -32,7 +31,6 @@ export interface DeliveryOptions {
 }
 
 export interface ProductFormData {
-
   title: string;
   category: string;
   condition: string;
@@ -49,7 +47,7 @@ export interface ProductFormData {
   email: string;
   deliveryOptions: DeliveryOptions;
   agreeToTerms: boolean;
-  images:File[]
+  images: File[]
 }
 
 interface SubmissionResult {
@@ -79,7 +77,8 @@ export class ProductListingFormComponent implements OnInit, AfterViewInit, OnDes
   private map: any;
   private marker: any;
   private mapInitializationAttempted = false;
-    user: User = {};
+  private leafletLoaded = false;
+  user: User = {};
 
   // Signals
   currentStep = signal(1);
@@ -97,9 +96,9 @@ export class ProductListingFormComponent implements OnInit, AfterViewInit, OnDes
 
   // Data
   categories: Category[] = [
-    { value: 'printers', label:"Printers & Scanners"},
-    { value: 'photography', label: 'Photograpy & Video' },
-    {value: 'vechiles',label:"Cars & Bikes"},
+    { value: 'printers', label: "Printers & Scanners" },
+    { value: 'photography', label: 'Photography & Video' },
+    { value: 'vehicles', label: "Cars & Bikes" },
     { value: 'tools', label: 'Tools & Equipments' },
     { value: 'audio', label: 'Audio & Music' },
     { value: 'computing', label: 'Computing & Tech' },
@@ -134,34 +133,41 @@ export class ProductListingFormComponent implements OnInit, AfterViewInit, OnDes
     'Larkana': { lat: 27.5590, lng: 68.2120 }
   };
 
-  constructor(private ngZone: NgZone,
+  constructor(
+    private ngZone: NgZone,
     private authService: AuthService,
-    private listingService:ListingsService,
-    private toasterService:ToasterService) {
+    private listingService: ListingsService,
+    private toasterService: ToasterService,
+    private cdr: ChangeDetectorRef
+  ) {
     this.initializeForm();
   }
 
   ngOnInit() {
-    // Ensure Leaflet CSS is loaded
+    // Load Leaflet CSS immediately
     this.loadLeafletCSS();
+    // Load Leaflet script
+    this.loadLeafletScript();
 
+    // Subscribe to user data
+    this.authService.user$
+      .pipe()
+      .subscribe(user => {
+        this.user = user;
+      });
 
-     // Subscribe to user data
-        this.authService.user$
-          .pipe()
-          .subscribe(user => {
-            this.user = user;
-          });
-
-        if (!this.user) {
-          this.authService.loadUser();
-        }
-
+    if (!this.user) {
+      this.authService.loadUser();
+    }
   }
 
   ngAfterViewInit() {
-    // Load Leaflet after view is initialized
-    this.loadLeafletScript();
+    // Additional check after view init
+    if (this.leafletLoaded && this.currentStep() === 4) {
+      setTimeout(() => {
+        this.initializeMapIfReady();
+      }, 100);
+    }
   }
 
   ngOnDestroy() {
@@ -176,94 +182,120 @@ export class ProductListingFormComponent implements OnInit, AfterViewInit, OnDes
 
   private loadLeafletCSS(): void {
     // Check if CSS is already loaded
-    if (document.querySelector('link[href*="leaflet.css"]')) {
+    if (document.querySelector('link[href*="leaflet"]')) {
       return;
     }
 
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css';
+    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+    link.crossOrigin = '';
     document.head.appendChild(link);
   }
 
-  private loadLeafletScript(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      // Check if already loaded
-      if (window.L) {
-        resolve();
-        return;
+  private loadLeafletScript(): void {
+    // Check if already loaded
+    if (window.L) {
+      this.leafletLoaded = true;
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+    script.crossOrigin = '';
+
+    script.onload = () => {
+      this.leafletLoaded = true;
+      console.log('Leaflet script loaded successfully');
+
+      // If we're on step 4 and have the map container, initialize the map
+      if (this.currentStep() === 4 && this.mapContainer) {
+        setTimeout(() => {
+          this.initializeMapIfReady();
+        }, 100);
       }
+    };
 
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+    script.onerror = (error) => {
+      console.error('Failed to load Leaflet script:', error);
+    };
 
-      script.onload = () => {
-        this.ngZone.run(() => {
-          console.log('Leaflet script loaded successfully');
-          resolve();
-        });
-      };
-
-      script.onerror = (error) => {
-        console.error('Failed to load Leaflet script:', error);
-        reject(new Error('Failed to load Leaflet'));
-      };
-
-      document.head.appendChild(script);
-    });
+    document.head.appendChild(script);
   }
 
-  private async initializeMap(): Promise<void> {
-    if (this.mapInitializationAttempted || !window.L || !this.mapContainer) {
+  private initializeMapIfReady(): void {
+    if (!this.leafletLoaded || !window.L || !this.mapContainer || this.mapInitializationAttempted) {
+      return;
+    }
+
+    this.initializeMap();
+  }
+
+  private initializeMap(): void {
+    if (this.mapInitializationAttempted) {
       return;
     }
 
     this.mapInitializationAttempted = true;
 
     try {
-      // Wait for DOM element to be ready
-      await new Promise(resolve => setTimeout(resolve, 100));
-
       const container = this.mapContainer.nativeElement;
       if (!container) {
-        throw new Error('Map container not found');
+        console.error('Map container not found');
+        return;
       }
+
+      // Clear any existing map instance
+      container.innerHTML = '';
 
       // Default to Pakistan center
       const defaultCenter: LocationCoordinates = { lat: 30.3753, lng: 69.3451 };
 
-      // Initialize map outside Angular zone for performance
-      this.ngZone.runOutsideAngular(() => {
-        this.map = window.L.map(container, {
-          center: [defaultCenter.lat, defaultCenter.lng],
-          zoom: 6,
-          scrollWheelZoom: true,
-          attributionControl: true
-        });
+      // Initialize map
+      this.map = window.L.map(container, {
+        center: [defaultCenter.lat, defaultCenter.lng],
+        zoom: 6,
+        scrollWheelZoom: true,
+        attributionControl: true,
+        zoomControl: true,
+        doubleClickZoom: true,
+        dragging: true,
+        tap: true,
+        touchZoom: true
+      });
 
-        // Add tile layer
-        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-          attribution: '© OpenStreetMap contributors'
-        }).addTo(this.map);
+      // Add tile layer
+      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(this.map);
 
-        // Add click event listener
-        this.map.on('click', (e: any) => {
-          this.ngZone.run(() => {
-            this.setMapMarker(e.latlng.lat, e.latlng.lng);
-          });
-        });
-
-        // Handle map ready event
-        this.map.whenReady(() => {
-          this.ngZone.run(() => {
-            this.mapInitialized.set(true);
-            console.log('Map initialized successfully');
-          });
+      // Add click event listener
+      this.map.on('click', (e: any) => {
+        this.ngZone.run(() => {
+          this.setMapMarker(e.latlng.lat, e.latlng.lng);
         });
       });
 
-      // Force resize after initialization
+      // Handle map ready event
+      this.map.whenReady(() => {
+        this.ngZone.run(() => {
+          this.mapInitialized.set(true);
+          console.log('Map initialized successfully');
+          this.cdr.detectChanges();
+        });
+
+        // Force resize after ready
+        setTimeout(() => {
+          if (this.map) {
+            this.map.invalidateSize();
+          }
+        }, 100);
+      });
+
+      // Force initial resize
       setTimeout(() => {
         if (this.map) {
           this.map.invalidateSize();
@@ -272,9 +304,8 @@ export class ProductListingFormComponent implements OnInit, AfterViewInit, OnDes
 
     } catch (error) {
       console.error('Error initializing map:', error);
-      this.ngZone.run(() => {
-        this.mapInitialized.set(false);
-      });
+      this.mapInitialized.set(false);
+      this.mapInitializationAttempted = false; // Allow retry
     }
   }
 
@@ -287,14 +318,45 @@ export class ProductListingFormComponent implements OnInit, AfterViewInit, OnDes
         this.map.removeLayer(this.marker);
       }
 
+      // Create custom icon
+      const customIcon = window.L.divIcon({
+        className: 'custom-map-marker',
+        html: `
+          <div style="
+            background: #ef4444;
+            width: 25px;
+            height: 25px;
+            border-radius: 50% 50% 50% 0;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            transform: rotate(-45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          ">
+            <div style="
+              background: white;
+              width: 6px;
+              height: 6px;
+              border-radius: 50%;
+              transform: rotate(45deg);
+            "></div>
+          </div>
+        `,
+        iconSize: [25, 25],
+        iconAnchor: [12, 25],
+        popupAnchor: [0, -25]
+      });
+
       // Add new marker
-      this.marker = window.L.marker([lat, lng])
+      this.marker = window.L.marker([lat, lng], { icon: customIcon })
         .addTo(this.map)
         .bindPopup('Your product location')
         .openPopup();
 
-      // Update coordinates in Angular zone
+      // Update coordinates
       this.selectedCoordinates.set({ lat, lng });
+      console.log('Marker set at:', { lat, lng });
 
     } catch (error) {
       console.error('Error setting marker:', error);
@@ -356,7 +418,7 @@ export class ProductListingFormComponent implements OnInit, AfterViewInit, OnDes
 
   async getCurrentLocation(): Promise<void> {
     if (!navigator.geolocation) {
-      alert('Geolocation is not supported by this browser.');
+      this.toasterService.show('Geolocation is not supported by this browser.', 'error');
       return;
     }
 
@@ -366,21 +428,30 @@ export class ProductListingFormComponent implements OnInit, AfterViewInit, OnDes
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
           enableHighAccuracy: true,
-          timeout: 10000,
+          timeout: 15000,
           maximumAge: 60000
         });
       });
 
       const { latitude, longitude } = position.coords;
 
+      // Initialize map if not already done
+      if (!this.mapInitialized() && this.leafletLoaded) {
+        await new Promise(resolve => {
+          this.initializeMap();
+          setTimeout(resolve, 500);
+        });
+      }
+
       if (this.map) {
         this.map.setView([latitude, longitude], 15);
         this.setMapMarker(latitude, longitude);
+        this.toasterService.show('Location found successfully!', 'success');
       }
 
     } catch (error) {
       console.error('Error getting location:', error);
-      alert('Unable to retrieve your location. Please click on the map to set your location manually.');
+      this.toasterService.show('Unable to retrieve your location. Please click on the map to set your location manually.', 'warning');
     } finally {
       this.isLoadingLocation.set(false);
     }
@@ -411,16 +482,13 @@ export class ProductListingFormComponent implements OnInit, AfterViewInit, OnDes
       this.currentStep.set(newStep);
 
       // Initialize map when reaching step 4
-      if (newStep === 4 && !this.mapInitializationAttempted) {
+      if (newStep === 4) {
         // Wait for Angular to render the step
-        setTimeout(async () => {
-          try {
-            await this.loadLeafletScript();
-            await this.initializeMap();
-          } catch (error) {
-            console.error('Error initializing map on step 4:', error);
+        setTimeout(() => {
+          if (this.leafletLoaded && !this.mapInitializationAttempted) {
+            this.initializeMapIfReady();
           }
-        }, 150);
+        }, 200);
       }
     } else {
       // Mark fields as touched to show validation errors
@@ -467,18 +535,18 @@ export class ProductListingFormComponent implements OnInit, AfterViewInit, OnDes
     switch (step) {
       case 1:
         return !!(this.productForm.get('title')?.valid &&
-               this.productForm.get('category')?.valid &&
-               this.productForm.get('condition')?.valid);
+          this.productForm.get('category')?.valid &&
+          this.productForm.get('condition')?.valid);
       case 2:
         return !!(this.productForm.get('description')?.valid &&
-               this.productForm.get('price')?.valid);
+          this.productForm.get('price')?.valid);
       case 3:
         return this.productImages().length > 0;
       case 4:
         return !!(this.productForm.get('address')?.valid &&
-               this.productForm.get('city')?.valid &&
-               this.productForm.get('phone')?.valid &&
-               (!this.productForm.get('email')?.value || this.productForm.get('email')?.valid));
+          this.productForm.get('city')?.valid &&
+          this.productForm.get('phone')?.valid &&
+          (!this.productForm.get('email')?.value || this.productForm.get('email')?.valid));
       case 5:
         return !!(this.productForm.valid && this.productImages().length > 0);
       default:
@@ -535,7 +603,8 @@ export class ProductListingFormComponent implements OnInit, AfterViewInit, OnDes
   dismiss() {
     this.dismissed = true;
   }
-  // Image handling
+
+  // Image handling methods remain the same
   onFileSelect(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files) {
@@ -624,60 +693,39 @@ export class ProductListingFormComponent implements OnInit, AfterViewInit, OnDes
     this.submitError.set(null);
 
     try {
-      // Simulate API call with realistic delay
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      if (this.user?.emailVerified) {
+        const deliveryOptions: DeliveryOptions = {
+          pickupAvailable: this.productForm.get('pickupAvailable')?.value || false,
+          deliveryAvailable: this.productForm.get('deliveryAvailable')?.value || false,
+          shippingAvailable: this.productForm.get('shippingAvailable')?.value || false
+        };
 
-      const deliveryOptions: DeliveryOptions = {
-        pickupAvailable: this.productForm.get('pickupAvailable')?.value || false,
-        deliveryAvailable: this.productForm.get('deliveryAvailable')?.value || false,
-        shippingAvailable: this.productForm.get('shippingAvailable')?.value || false
-      };
+        const formData: ProductFormData = {
+          ...this.productForm.value,
+          coordinates: this.selectedCoordinates(),
+          deliveryOptions,
+          images: this.productImages().map(img => img.file)
+        };
 
-      const formData: ProductFormData = {
-        ...this.productForm.value,
-        coordinates: this.selectedCoordinates(),
-        deliveryOptions,
-        images: this.productImages().map(img => img.file),
-        tags: this.tags(),
-        timestamp: new Date().toISOString()
-      };
-
-      console.log('Product listing data:', formData);
-
-      if(this.user?.emailVerified){
         this.listingService.createListing(formData).subscribe({
-    next: (res) => {
-      console.log('✅ Product listed successfully:', res);
-      this.toasterService.show("Product listed successfully","success")
-      this.submitSuccess.set(true);
-      this.resetForm();
-    },
-    error: (err) => {
-      console.error('❌ Product listing failed:', err);
-      this.toasterService.show("Product listing failed:",'error');
-      this.submitError.set('Failed to list the product. Please try again.');
-    }
-  }).add(() => {
-    this.isLoading.set(false);
-  });
-    }else{
-      this.toasterService.show("To List Equipment You Must verify your email first!",'warning');
-      throw new Error('To List Equipment You Must verify your email first!');
-    }
-
-      // // Simulate potential API errors occasionally
-      // if (Math.random() < 0.1) { // 10% chance of error
-      //   throw new Error('Network error occurred. Please try again.');
-      // }
-
-      const result: SubmissionResult = {
-        success: true,
-        message: 'Product listed successfully',
-        listingId: this.generateId()
-      };
-
-      this.submitSuccess.set(true);
-      this.resetForm();
+          next: (res) => {
+            console.log('Product listed successfully:', res);
+            this.toasterService.show("Product listed successfully", "success");
+            this.submitSuccess.set(true);
+            this.resetForm();
+          },
+          error: (err) => {
+            console.error('Product listing failed:', err);
+            this.toasterService.show("Product listing failed", 'error');
+            this.submitError.set('Failed to list the product. Please try again.');
+          }
+        }).add(() => {
+          this.isLoading.set(false);
+        });
+      } else {
+        this.toasterService.show("To List Equipment You Must verify your email first!", 'warning');
+        throw new Error('To List Equipment You Must verify your email first!');
+      }
 
     } catch (error) {
       this.submitError.set(error instanceof Error ? error.message : 'Failed to publish listing. Please try again.');
