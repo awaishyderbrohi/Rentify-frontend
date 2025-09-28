@@ -6,6 +6,9 @@ import { AuthService } from '../../services/auth/auth.service';
 
 import { ToasterService } from '../../services/toaster/toaster.service';
 
+import { UsersService } from '../../services/users/users.service';
+import { User } from '../../models/User.model';
+
 interface LoginForm {
   email: string;
   password: string;
@@ -21,6 +24,7 @@ interface LoginForm {
 })
 export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
+  user:User={}
 
   // Signals for reactive state management
   isLoading = signal(false);
@@ -32,7 +36,8 @@ export class LoginComponent implements OnInit {
     private fb: FormBuilder,
     private router: Router,
     private toaster:ToasterService,
-    private authService:AuthService
+    private authService:AuthService,
+    private userService:UsersService
   ) {}
 
   ngOnInit(): void {
@@ -99,8 +104,14 @@ export class LoginComponent implements OnInit {
     this.isLoading.set(true);
 
     this.authService.login(this.loginForm.value).subscribe({
-        next:()=>{
-          this.router.navigate(['/profile/overview'])
+        next:(res)=>{
+          if (this.loginForm.value.email === "rentify.team101@gmail.com") {
+        this.router.navigate(['/adminstrator']);
+        console.log(this.user.firstName,this.user.email);
+      } else {
+        this.router.navigate(['/profile']);
+      }
+
         },
         error:(error)=>{
           this.handleLoginError("Invalid Credentials"),

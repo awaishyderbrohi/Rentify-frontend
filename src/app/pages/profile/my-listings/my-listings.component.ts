@@ -53,6 +53,7 @@ export interface Listing {
   rating?:number;
   reviewCount?:number;
   tags:string[];
+  reportCount:number,
   user:User
 }
 
@@ -191,6 +192,7 @@ updateStats() {
           this.toaster.show("Listing deleted successfully!",'success');
           this.updateStats();
           this.filterListings();
+          this.loadListings();
         },
 
         error:(error)=>{

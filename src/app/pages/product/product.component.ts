@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { ListingsService } from '../../services/listings/listings.service';
 import { AuthService } from '../../services/auth/auth.service';
@@ -39,7 +39,7 @@ interface BookingRequest {
 @Component({
   selector: 'app-product-page',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule,FormsModule],
   templateUrl: './product.component.html',
   styleUrls: ['./product.component.css'],
 })
@@ -388,7 +388,7 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     let total = 0;
-    if (this.listing.priceType === 'daily') {
+    if (this.listing.priceType === 'per day') {
       total = this.listing.price * diffDays;
     } else if (this.listing.priceType === 'weekly') {
       total = this.listing.price * Math.ceil(diffDays / 7);
@@ -441,24 +441,13 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  reportListing() {
+  reportListing(id:string) {
     if (!this.authService.isLoggedIn()) {
       this.toaster.show('Please login to report this listing', 'warning');
       return;
     }
-
-    const reason = prompt('Please provide a reason for reporting this listing:');
-
-    if (reason) {
-      setTimeout(() => {
-        this.toaster.show('Report submitted successfully. Thank you for helping keep our platform safe.', 'success');
-        console.log('Listing reported:', {
-          listingId: this.listing?.id,
-          reason: reason,
-          reportedAt: new Date().toISOString()
-        });
-      }, 500);
-    }
+    let type="listing"
+    this.router.navigate(["/report",type,id])
   }
 
   getStatusBadgeClass(status: string): string {
@@ -508,9 +497,48 @@ export class ProductPageComponent implements OnInit, OnDestroy, AfterViewInit {
     return startDate.toISOString().split('T')[0];
   }
 
-  getRentalDuration() { }
+
 
   navigateUserProfile() {
     this.router.navigate(["/users", this.listing?.user.id]);
   }
+
+
+  // Add this method to your ProductPageComponent class
+
+/**
+ * Calculate rental duration in days
+ */
+getRentalDuration(): number {
+  if (!this.bookingRequest.startDate || !this.bookingRequest.endDate) {
+    return 0;
+  }
+
+  const startDate = new Date(this.bookingRequest.startDate);
+  const endDate = new Date(this.bookingRequest.endDate);
+
+  // Calculate difference in milliseconds
+  const timeDiff = endDate.getTime() - startDate.getTime();
+
+  // Convert to days and ensure minimum 1 day
+  const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+  return Math.max(daysDiff, 1);
+}
+
+/**
+ * Get formatted rental duration text
+ */
+getRentalDurationText(): string {
+  const days = this.getRentalDuration();
+
+  if (days === 0) return '';
+  if (days === 1) return '1 day';
+  if (days < 7) return `${days} days`;
+  if (days === 7) return '1 week';
+  if (days < 30) return `${days} days (${Math.floor(days/7)} weeks)`;
+  if (days === 30) return '1 month';
+
+  return `${days} days (${Math.floor(days/30)} months)`;
+}
 }

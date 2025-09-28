@@ -21,8 +21,8 @@ import { ListingsService } from '../../services/listings/listings.service';
       <div class="max-w-7xl mx-auto px-6 py-8">
         <!-- Header -->
         <div class="mb-8">
-          <h1 class="text-3xl font-bold text-gray-900 mb-2">Account Settings</h1>
-          <p class="text-gray-600">Manage your profile information and preferences</p>
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">User Dashboard</h1>
+          <p class="text-gray-600">Manage your listings & profile information</p>
         </div>
 
         <div class="flex gap-8">

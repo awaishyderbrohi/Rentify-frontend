@@ -1,625 +1,489 @@
-<div class="min-h-screen bg-base-200">
-  <!-- Loading State -->
-  <div *ngIf="isLoading" class="flex items-center justify-center min-h-screen">
-    <span class="loading loading-spinner loading-lg text-neutral"></span>
+<!-- Loading State -->
+<div *ngIf="isLoading" class="min-h-screen bg-slate-50 flex items-center justify-center">
+  <div class="text-center">
+    <span class="loading loading-spinner loading-lg text-slate-600"></span>
+    <p class="mt-4 text-slate-600">Loading product details...</p>
   </div>
+</div>
 
-  <!-- Product Content -->
-  <div *ngIf="!isLoading && listing" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<!-- Main Product Content -->
+<div *ngIf="!isLoading && listing" class="min-h-screen bg-slate-50">
 
-    <!-- Main Product Section -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
 
-      <!-- Image Gallery - Enhanced Design with Fixed Sizing -->
-<div class="lg:col-span-2">
-  <div class="card bg-base-100 shadow-xl overflow-hidden">
-    <!-- Status & Views Header -->
-    <div class="flex items-center justify-between p-4 border-b border-base-300">
-      <div class="flex items-center gap-3">
-        <div [class]="getStatusBadgeClass(listing.status)" class="badge badge-lg font-medium">
-          {{ listing.status | titlecase }}
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+
+      <!-- Image Gallery Section -->
+      <div class="space-y-4">
+        <!-- Main Image -->
+        <div class="relative bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="aspect-w-16 aspect-h-12">
+            <img
+              [src]="listing.images[selectedImageIndex]"
+              [alt]="listing.title"
+              class="w-full h-96 object-cover"
+            />
+          </div>
+
+          <!-- Image Navigation Arrows -->
+          <div *ngIf="listing.images.length > 1" class="absolute inset-0 flex items-center justify-between p-4">
+            <button
+              (click)="prevImage()"
+              class="btn btn-circle btn-sm bg-white/80 border-slate-200 hover:bg-white shadow-lg">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+            </button>
+            <button
+              (click)="nextImage()"
+              class="btn btn-circle btn-sm bg-white/80 border-slate-200 hover:bg-white shadow-lg">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Status Badge -->
+          <div class="absolute top-4 left-4">
+            <div [class]="'badge ' + getStatusBadgeClass(listing.status)">
+              {{listing.status | uppercase}}
+            </div>
+          </div>
         </div>
-        <div class="badge badge-neutral badge-outline" *ngIf="listing.brand">
-          {{ listing.brand }}
-        </div>
-      </div>
-    </div>
 
-    <!-- Main Image Container with Fixed Dimensions -->
-    <figure class="relative w-full h-[500px] bg-base-300 overflow-hidden">
-      <!-- Main Product Image -->
-      <div class="w-full h-full flex items-center justify-center bg-white">
-        <img *ngIf="listing.images.length > 0"
-             [src]="listing.images[selectedImageIndex]"
-             [alt]="listing.title"
-             class="max-w-full max-h-full w-auto h-auto object-contain transition-all duration-300 hover:scale-105"
-             style="max-width: 100%; max-height: 100%; width: auto; height: auto;">
-
-        <!-- No Image Placeholder -->
-        <div *ngIf="listing.images.length === 0"
-             class="w-full h-full flex items-center justify-center text-base-content/50">
-          <div class="text-center">
-            <svg class="mx-auto h-24 w-24 mb-4" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
-            </svg>
-            <p class="text-lg font-medium">No images available</p>
+        <!-- Thumbnail Gallery -->
+        <div *ngIf="listing.images.length > 1" class="grid grid-cols-5 gap-2">
+          <div
+            *ngFor="let image of listing.images; let i = index"
+            (click)="selectImage(i)"
+            class="relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200"
+            [class.border-slate-400]="i === selectedImageIndex"
+            [class.border-slate-200]="i !== selectedImageIndex"
+          >
+            <img [src]="image" [alt]="'Image ' + (i + 1)" class="w-full h-16 object-cover">
+            <div
+              *ngIf="i !== selectedImageIndex"
+              class="absolute inset-0 bg-white/30"
+            ></div>
           </div>
         </div>
       </div>
 
-      <!-- Navigation Arrows -->
-      <div *ngIf="listing.images.length > 1" class="absolute inset-y-0 left-0 right-0 flex items-center justify-between p-4 pointer-events-none">
-        <button (click)="prevImage()" class="btn btn-circle btn-neutral/90 hover:btn-neutral shadow-lg pointer-events-auto transition-all duration-200 hover:scale-110">
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <button (click)="nextImage()" class="btn btn-circle btn-neutral/90 hover:btn-neutral shadow-lg pointer-events-auto transition-all duration-200 hover:scale-110">
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
+      <!-- Product Details Section -->
+      <div class="space-y-6">
+        <!-- Product Header -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h1 class="text-2xl font-bold text-slate-900 mb-2">{{listing.title}}</h1>
+              <p class="text-slate-600 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                {{listing.area}}, {{listing.city}}
+              </p>
+            </div>
 
-      <!-- Image Counter -->
-      <div *ngIf="listing.images.length > 1"
-           class="absolute bottom-4 right-4 badge badge-neutral badge-lg font-medium shadow-lg">
-        {{ selectedImageIndex + 1 }} / {{ listing.images.length }}
-      </div>
+            <!-- Action Buttons -->
+            <div class="flex gap-2">
+              <button
+                (click)="shareProduct()"
+                class="btn btn-ghost btn-circle btn-sm text-slate-600 hover:text-slate-900">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
+                </svg>
+              </button>
+              <button
+                (click)="reportListing(listing.id)"
+                class="btn btn-ghost btn-circle btn-sm text-slate-600 hover:text-red-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.667-.833-2.5 0L4.232 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
 
-      <!-- Zoom Indicator -->
-      <div class="absolute top-4 right-4 opacity-0 hover:opacity-100 transition-opacity duration-200">
-        <div class="badge badge-neutral badge-sm">
-          <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
-          </svg>
-          Hover to zoom
+          <!-- Pricing -->
+          <div class="bg-slate-50 rounded-xl p-4 mb-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-3xl font-bold text-slate-900">Rs{{listing.price | number}}</span>
+                <span class="text-slate-600 ml-2">per day</span>
+              </div>
+              <div class="text-right">
+                <p class="text-sm text-slate-600">Daily rate</p>
+                <p class="text-xs text-slate-500">Minimum 1 day rental</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="grid grid-cols-2 gap-3">
+            <button
+              (click)="openBookingForm()"
+              class="btn btn-primary bg-slate-900 hover:bg-slate-800 border-slate-900 text-white">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+              Book Now
+            </button>
+            <button
+              (click)="showContact()"
+              class="btn btn-outline border-slate-300 text-slate-700 hover:bg-slate-100">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+              </svg>
+              Contact
+            </button>
+          </div>
+        </div>
+
+        <!-- Owner Information -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+             <div class="avatar">
+              <!-- If profileUrl exists, show image -->
+                <div *ngIf="listing.user.profilePicUrl; else initials" class="w-12 h-12 rounded-full overflow-hidden">
+                 <img [src]="listing.user.profilePicUrl" alt="Profile" class="w-full h-full object-cover" />
+                </div>
+
+               <!-- Otherwise, show initials -->
+              <ng-template #initials>
+              <div class="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center">
+             <span class="text-slate-600 font-medium">
+              {{ listing.user.firstName?.charAt(0) }}{{ listing.user.lastName?.charAt(0) }}
+            </span>
+          </div>
+          </ng-template>
+        </div>
+
+              <div>
+                <h3 class="font-semibold text-slate-900">{{listing.user.firstName}} {{listing.user.lastName}}</h3>
+                <p class="text-sm text-slate-600">Owner</p>
+              </div>
+            </div>
+            <button
+              (click)="navigateUserProfile()"
+              class="btn btn-outline btn-sm border-slate-300 text-slate-700 hover:bg-slate-100">
+              View Profile
+            </button>
+          </div>
         </div>
       </div>
-    </figure>
+    </div>
 
-    <!-- Enhanced Thumbnails -->
-    <div *ngIf="listing.images.length > 1" class="p-4 bg-base-50 border-t border-base-300">
-      <div class="flex space-x-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-neutral scrollbar-track-base-300">
-        <button *ngFor="let image of listing.images; let i = index"
-                (click)="selectImage(i)"
-                [class.ring-2]="i === selectedImageIndex"
-                [class.ring-neutral]="i === selectedImageIndex"
-                [class.shadow-lg]="i === selectedImageIndex"
-                [class.scale-105]="i === selectedImageIndex"
-                class="flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden transition-all duration-200 bg-white hover:scale-105 hover:shadow-md">
-          <img [src]="image"
-               [alt]="'Thumbnail ' + (i + 1)"
-               class="w-full h-full object-cover">
-        </button>
+    <!-- Product Information Tabs -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mb-8">
+      <div role="tablist" class="tabs tabs-bordered">
+        <input type="radio" name="product_tabs" role="tab" class="tab text-slate-700" aria-label="Description" checked />
+        <div role="tabpanel" class="tab-content p-6">
+          <h3 class="text-lg font-semibold text-slate-900 mb-3">Description</h3>
+          <p class="text-slate-700 leading-relaxed">{{listing.description}}</p>
+
+          <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 class="font-medium text-slate-900 mb-2">Category</h4>
+              <span class="badge badge-outline badge-lg">{{listing.category}}</span>
+            </div>
+            <div>
+              <h4 class="font-medium text-slate-900 mb-2">Delivery Options</h4>
+              <p class="text-slate-600 text-sm">{{getDeliveryOptionsText(listing.deliveryOptions)}}</p>
+            </div>
+          </div>
+        </div>
+
+        <input type="radio" name="product_tabs" role="tab" class="tab text-slate-700" aria-label="Location" />
+        <div role="tabpanel" class="tab-content p-6">
+          <h3 class="text-lg font-semibold text-slate-900 mb-3">Location</h3>
+          <div class="space-y-4">
+            <div class="flex items-center gap-2 text-slate-700">
+              <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+              <div>
+                <p class="font-medium">{{listing.area}}, {{listing.city}}</p>
+                <p class="text-sm text-slate-600">{{listing.address}}</p>
+              </div>
+            </div>
+
+            <!-- Map Container -->
+            <div class="mt-4">
+              <div
+                #mapContainer
+                class="w-full h-64 bg-slate-100 rounded-xl border border-slate-200"
+                [class.flex]="!isMapLoaded"
+                [class.items-center]="!isMapLoaded"
+                [class.justify-center]="!isMapLoaded"
+              >
+                <div *ngIf="!isMapLoaded" class="text-slate-500">
+                  <span class="loading loading-spinner loading-md"></span>
+                  <p class="ml-2">Loading map...</p>
+                </div>
+              </div>
+
+              <button
+                (click)="openInMaps()"
+                class="btn btn-outline btn-sm border-slate-300 text-slate-700 hover:bg-slate-100 mt-3">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                </svg>
+                Open in Maps
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <input type="radio" name="product_tabs" role="tab" class="tab text-slate-700" aria-label="Reviews" />
+        <div role="tabpanel" class="tab-content p-6">
+          <h3 class="text-lg font-semibold text-slate-900 mb-3">Reviews</h3>
+          <div class="text-center py-8 text-slate-500">
+            <svg class="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+            </svg>
+            <p>No reviews yet</p>
+            <p class="text-sm">Be the first to rent this item and leave a review!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Related Products -->
+    <div *ngIf="relatedProducts.length > 0" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+      <h3 class="text-xl font-semibold text-slate-900 mb-6">Related Products</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div
+          *ngFor="let product of relatedProducts.slice(0, 4)"
+          (click)="navigateToProduct(product.id)"
+          class="card card-compact bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+        >
+          <figure class="aspect-w-16 aspect-h-9">
+            <img [src]="product.images[0]" [alt]="product.title" class="w-full h-32 object-cover">
+          </figure>
+          <div class="card-body">
+            <h4 class="card-title text-sm text-slate-900">{{product.title}}</h4>
+            <p class="text-xs text-slate-600">{{product.area}}, {{product.city}}</p>
+            <div class="flex items-center justify-between mt-2">
+              <span class="font-semibold text-slate-900">Rs{{product.price}}</span>
+              <span class="text-xs text-slate-500">per day</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact Information Modal -->
+  <dialog [class.modal-open]="showContactInfo" class="modal">
+    <div class="modal-box bg-white border border-slate-200">
+      <form method="dialog">
+        <button
+          (click)="showContactInfo = false"
+          class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 text-slate-500">✕</button>
+      </form>
+      <h3 class="font-bold text-lg text-slate-900 mb-4">Contact Information</h3>
+
+      <div class="space-y-4">
+        <div class="flex items-center space-x-3">
+          <div class="avatar">
+            <div class="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center">
+              <span class="text-slate-600 font-medium">
+                {{listing.user.firstName?.charAt(0)}}{{listing.user.lastName?.charAt(0)}}
+              </span>
+            </div>
+          </div>
+          <div>
+            <h4 class="font-semibold text-slate-900">{{listing.user.firstName}} {{listing.user.lastName}}</h4>
+            <p class="text-sm text-slate-600">Product Owner</p>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="space-y-3">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+            </svg>
+            <span class="text-slate-700">{{listing.user.email}}</span>
+          </div>
+
+          <div class="flex items-center gap-3" *ngIf="listing.user.phoneNumber">
+            <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+            </svg>
+            <span class="text-slate-700">{{listing.user.phoneNumber}}</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <p class="text-sm text-slate-600">
+          Please be respectful when contacting the owner. Include details about your rental needs and dates.
+        </p>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+      <button (click)="showContactInfo = false">close</button>
+    </form>
+  </dialog>
+
+  <!-- Booking Form Modal -->
+  <dialog [class.modal-open]="showBookingForm" class="modal">
+    <div class="modal-box bg-white border border-slate-200 max-w-lg">
+      <form method="dialog">
+        <button
+          (click)="showBookingForm = false"
+          class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 text-slate-500">✕</button>
+      </form>
+
+      <h3 class="font-bold text-xl text-slate-900 mb-6">Book Rental</h3>
+
+      <form (ngSubmit)="submitBookingRequest()" class="space-y-6">
+        <!-- Product Summary -->
+        <div class="bg-slate-50 rounded-xl p-4">
+          <div class="flex gap-3">
+            <img [src]="listing.images[0]" [alt]="listing.title" class="w-16 h-16 rounded-lg object-cover">
+            <div class="flex-1">
+              <h4 class="font-semibold text-slate-900">{{listing.title}}</h4>
+              <p class="text-sm text-slate-600">{{listing.area}}, {{listing.city}}</p>
+              <p class="text-sm font-medium text-slate-900 mt-1">Rs{{listing.price | number}} per day</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Date Selection -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text text-slate-700 font-medium">Start Date</span>
+            </label>
+            <input
+              type="date"
+              [(ngModel)]="bookingRequest.startDate"
+              name="startDate"
+              [min]="minDate"
+              (change)="calculateTotal()"
+              class="input input-bordered border-slate-300 focus:border-slate-500"
+              required
+            />
+          </div>
+
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text text-slate-700 font-medium">End Date</span>
+            </label>
+            <input
+              type="date"
+              [(ngModel)]="bookingRequest.endDate"
+              name="endDate"
+              [min]="minEndDate"
+              (change)="calculateTotal()"
+              class="input input-bordered border-slate-300 focus:border-slate-500"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Rental Summary -->
+        <!-- Total Cost Breakdown - Replace your existing cost section with this -->
+<div *ngIf="bookingRequest.startDate && bookingRequest.endDate" class="alert bg-neutral/10 border-neutral/20">
+  <div class="w-full">
+    <!-- Rental Duration Info -->
+    <div class="mb-3 p-2 bg-base-100 rounded-lg">
+      <div class="text-sm text-base-content/70 mb-1">Rental Duration</div>
+      <div class="font-medium text-base-content">{{ getRentalDurationText() }}</div>
+      <div class="text-xs text-base-content/50">
+        {{ bookingRequest.startDate | date:'mediumDate' }} - {{ bookingRequest.endDate | date:'mediumDate' }}
+      </div>
+    </div>
+
+    <!-- Cost Breakdown -->
+    <div class="space-y-2">
+      <div class="flex justify-between items-center">
+        <span class="font-medium">
+          Rental Cost ({{ getRentalDuration() }} {{ getRentalDuration() === 1 ? 'day' : 'days' }})
+        </span>
+        <span>Rs {{ listing.price }} </span>
+      </div>
+
+      <div *ngIf="bookingRequest.deliveryOption === 'delivery' && listing?.deliveryOptions?.deliveryFee"
+           class="flex justify-between items-center">
+        <span class="font-medium">Delivery Fee</span>
+        <span>Rs{{ listing.deliveryOptions.deliveryFee }}</span>
+      </div>
+
+      <div class="divider my-2"></div>
+
+      <div class="flex justify-between items-center">
+        <span class="font-bold text-lg">Total Amount Rs: </span>
+        <span class="font-bold text-xl text-neutral"> {{ bookingRequest.totalAmount }}</span>
       </div>
     </div>
   </div>
 </div>
-      <!-- Product Details & Actions -->
-      <div class="space-y-6">
 
-        <!-- Title & Price Card -->
-        <div class="card bg-base-100 shadow-xl">
-          <div class="card-body">
-            <h1 class="text-3xl font-bold text-base-content mb-4 leading-tight">{{ listing.title }}</h1>
-
-            <!-- Price Section -->
-            <div class="flex items-baseline gap-2 mb-6">
-              <span class="text-4xl font-bold text-neutral">Rs{{ listing.price }}</span>
-              <span class="text-base-content/70 text-lg">/ {{ listing.priceType }}</span>
-            </div>
-
-            <!-- Brand & Model Info -->
-            <div *ngIf="listing.brand || listing.model" class="flex flex-wrap gap-4 text-sm mb-6">
-              <div *ngIf="listing.brand" class="flex items-center gap-2">
-                <span class="font-semibold text-base-content/70">Brand:</span>
-                <span class="badge badge-neutral">{{ listing.brand }}</span>
-              </div>
-              <div *ngIf="listing.model" class="flex items-center gap-2">
-                <span class="font-semibold text-base-content/70">Model:</span>
-                <span class="badge badge-outline">{{ listing.model }}</span>
-              </div>
-            </div>
-
-            <!-- Condition Badge -->
-            <div *ngIf="listing.condition" class="mb-6">
-              <div class="badge badge-lg badge-outline">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {{ listing.condition | titlecase }}
-              </div>
-            </div>
-
-            <!-- Primary Actions -->
-            <div class="space-y-3">
-              <button *ngIf="listing.status === 'ACTIVE'"
-                      (click)="openBookingForm()"
-                      class="btn bg-slate-700 hover:bg-slate-600 text-white border-slate-700 btn-lg  w-full">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                Book Now
-              </button>
-
-              <button *ngIf="listing.status !== 'ACTIVE'" disabled class="btn btn-disabled btn-lg btn-block">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
-                </svg>
-                Not Available
-              </button>
-
-              <!-- Secondary Actions -->
-              <div class="grid grid-cols-2 gap-3">
-                <button (click)="showContact()" class="btn btn-outline btn-neutral">
-                  <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                  Message
-                </button>
-                <button (click)="shareProduct()" class="btn btn-outline btn-neutral">
-                  <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                  </svg>
-                  Share
-                </button>
-              </div>
-
-              <button (click)="reportListing()" class="btn btn-outline btn-warning btn-block">
-                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-                Report Listing
-              </button>
-            </div>
-          </div>
+<!-- Show message when dates are not selected -->
+<div *ngIf="!bookingRequest.startDate || !bookingRequest.endDate" class="alert bg-info/10 border-info/20">
+  <svg class="w-6 h-6 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+  <span>Select rental dates to see total cost</span>
+</div>
+        <!-- Message -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text text-slate-700 font-medium"> Message (Optional) </span>
+          </label>
+          <div></div>
+          <textarea
+            [(ngModel)]="bookingRequest.message"
+            name="message"
+            class="textarea textarea-bordered w-full border-slate-300 focus:border-slate-500 h-20"
+            placeholder="Add any special requests or questions for the owner..."
+          ></textarea>
         </div>
 
-        <!-- Location & Delivery -->
-        <div class="card bg-base-100 shadow-xl">
-          <div class="card-body">
-            <h3 class="card-title text-xl mb-4 flex items-center">
-              <svg class="h-5 w-5 mr-2 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              Location & Delivery
-            </h3>
-
-            <div class="space-y-4">
-              <div class="flex items-start space-x-3 p-3 bg-base-50 rounded-lg">
-                <svg class="h-5 w-5 text-neutral mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <div>
-                  <p class="font-semibold text-base-content">{{ listing.area }}, {{ listing.city }}</p>
-                  <p class="text-sm text-base-content/70">{{ listing.address }}</p>
-                </div>
-              </div>
-
-              <div class="flex items-start space-x-3 p-3 bg-base-50 rounded-lg">
-                <svg class="h-5 w-5 text-neutral mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2v0M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                </svg>
-                <div class="flex-1">
-                  <p class="font-medium text-base-content mb-2">{{ getDeliveryOptionsText(listing.deliveryOptions) }}</p>
-                  <div class="flex gap-2">
-                    <div *ngIf="listing.deliveryOptions.pickup" class="badge badge-neutral badge-outline">
-                      <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      Pickup
-                    </div>
-                    <div *ngIf="listing.deliveryOptions.delivery" class="badge badge-neutral badge-outline">
-                      <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      Delivery
-                    </div>
-                  </div>
-                  <p *ngIf="listing.deliveryOptions.deliveryRadius" class="text-xs text-base-content/70 mt-1">
-                    Delivery radius: {{ listing.deliveryOptions.deliveryRadius }}km
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Seller Information -->
-        <div class="card bg-base-100 shadow-xl">
-          <div class="card-body">
-            <h3 class="card-title text-xl mb-4">Seller Information</h3>
-
-            <div class="flex items-center space-x-4 p-4 bg-base-50 rounded-lg">
-              <div class="avatar">
-                <div class="w-16 rounded-full bg-neutral text-neutral-content flex items-center justify-center shadow-lg">
-                  <img *ngIf="listing.user.profilePicUrl" [src]="listing.user.profilePicUrl" />
-                  <span *ngIf="!listing.user.profilePicUrl" class="font-bold text-xl">
-                    {{ (listing.user.firstName || 'A').charAt(0) }}
-                  </span>
-                </div>
-              </div>
-              <div class="flex-1">
-                <p class="font-semibold text-lg text-base-content"><button class="hover:cursor-pointer hover:scale-98" (click)="navigateUserProfile()"> {{ listing.user.firstName || "Anonymous" }} {{ listing.user.lastName }} </button></p>
-                <div class="flex items-center space-x-3 text-sm text-base-content/70 mt-1">
-                  <div *ngIf="listing.user?.ratingCount" class="flex items-center">
-                    <svg class="h-4 w-4 text-warning mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                    <span class="font-medium">{{ listing.user.ratingCount }}/5</span>
-                  </div>
-                  <div class="badge badge-ghost badge-sm">Verified Seller</div>
-                </div>
-              </div>
-            </div>
-
-            <div *ngIf="showContactInfo" class="border-t border-base-300 pt-4 mt-4 space-y-3">
-              <div class="flex items-center space-x-3 p-2 bg-base-50 rounded-lg">
-                <svg class="h-5 w-5 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                <span class="text-base-content font-medium">{{ listing.phone }}</span>
-              </div>
-              <div *ngFor="let email of listing.email" class="flex items-center space-x-3 p-2 bg-base-50 rounded-lg">
-                <svg class="h-5 w-5 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <span class="text-base-content font-medium">{{ email }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Product Details Section -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-      <!-- Main Content -->
-      <div class="lg:col-span-2 space-y-8">
-
-        <!-- Combined Description & Specifications -->
-        <div class="card bg-base-100 shadow-xl">
-          <div class="card-body">
-            <!-- Description Section -->
-            <h2 class="card-title text-2xl mb-4 flex items-center">
-              <svg class="h-6 w-6 mr-2 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Description
-            </h2>
-            <div class="prose prose-base max-w-none text-base-content mb-8">
-              <p class="whitespace-pre-wrap leading-relaxed">{{ listing.description }}</p>
-            </div>
-
-            <!-- Divider -->
-            <div class="divider">
-              <svg class="h-5 w-5 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-
-            <!-- Specifications Section -->
-            <h2 class="card-title text-2xl mb-6 flex items-center">
-              <svg class="h-6 w-6 mr-2 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              Specifications
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="space-y-4">
-                <div *ngIf="listing.category" class="flex justify-between items-center py-3 px-4 bg-base-50 rounded-lg">
-                  <span class="text-base-content/70 font-medium">Category</span>
-                  <span class="badge badge-neutral">{{ listing.category | titlecase }}</span>
-                </div>
-                <div *ngIf="listing.condition" class="flex justify-between items-center py-3 px-4 bg-base-50 rounded-lg">
-                  <span class="text-base-content/70 font-medium">Condition</span>
-                  <span class="badge badge-outline">{{ listing.condition | titlecase }}</span>
-                </div>
-                <div *ngIf="listing.brand" class="flex justify-between items-center py-3 px-4 bg-base-50 rounded-lg">
-                  <span class="text-base-content/70 font-medium">Brand</span>
-                  <span class="font-medium text-base-content">{{ listing.brand }}</span>
-                </div>
-              </div>
-              <div class="space-y-4">
-                <div *ngIf="listing.model" class="flex justify-between items-center py-3 px-4 bg-base-50 rounded-lg">
-                  <span class="text-base-content/70 font-medium">Model</span>
-                  <span class="font-medium text-base-content">{{ listing.model }}</span>
-                </div>
-                <div class="flex justify-between items-center py-3 px-4 bg-base-50 rounded-lg">
-                  <span class="text-base-content/70 font-medium">Listed</span>
-                  <span class="font-medium text-base-content">{{ formatDate(listing.createdAt) }}</span>
-                </div>
-                <div *ngIf="listing.updatedAt !== listing.createdAt" class="flex justify-between items-center py-3 px-4 bg-base-50 rounded-lg">
-                  <span class="text-base-content/70 font-medium">Updated</span>
-                  <span class="font-medium text-base-content">{{ formatDate(listing.updatedAt) }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Location Map -->
-        <div class="card bg-base-100 shadow-xl">
-          <div class="card-body p-0">
-            <div class="px-6 py-4 border-b border-base-300">
-              <h2 class="card-title text-2xl flex items-center">
-                <svg class="h-6 w-6 mr-2 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Location
-              </h2>
-              <p class="text-base-content/70 mt-1">{{ listing.area }}, {{ listing.city }}</p>
-            </div>
-
-            <!-- Map Container -->
-            <div class="relative">
-              <div #mapContainer id="productLocationMap" class="w-full h-80 bg-base-300 flex items-center justify-center">
-                <!-- Loading state for map -->
-                <div *ngIf="!isMapLoaded" class="text-center">
-                  <span class="loading loading-spinner loading-md text-neutral mb-2"></span>
-                  <p class="text-base-content/70 text-sm">Loading map...</p>
-                </div>
-
-                <!-- Fallback if no coordinates -->
-                <div *ngIf="!listing.coordinates && isMapLoaded" class="text-center text-base-content/70">
-                  <svg class="h-16 w-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m-6 3l6-3" />
-                  </svg>
-                  <p class="font-medium">Location not available</p>
-                  <p class="text-sm">Exact coordinates not provided</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Map Controls -->
-            <div class="px-6 py-4 bg-base-50 border-t border-base-300">
-              <div class="flex items-center justify-between">
-                <div class="flex-1">
-                  <p class="text-sm text-base-content/70 mb-1">Address</p>
-                  <p class="font-medium text-base-content">{{ listing.address }}</p>
-                </div>
-                <button *ngIf="listing.coordinates" (click)="openInMaps()" class="btn btn-sm btn-neutral btn-outline ml-4">
-                  <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                  Open in Maps
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Sidebar -->
-      <div class="space-y-6">
-        <!-- Safety & Trust -->
-        <div class="card bg-base-100 shadow-xl">
-          <div class="card-body">
-            <h3 class="card-title text-xl mb-4 flex items-center">
-              <svg class="h-5 w-5 mr-2 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-              Safety & Trust
-            </h3>
-            <div class="space-y-4">
-              <div class="flex items-start space-x-3 p-3 bg-success/10 rounded-lg">
-                <div class="badge badge-success badge-sm mt-1">
-                  <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <div>
-                  <p class="font-semibold text-base-content">Verified Listing</p>
-                  <p class="text-base-content/70 text-sm">This listing has been verified by our team</p>
-                </div>
-              </div>
-              <div class="flex items-start space-x-3 p-3 bg-info/10 rounded-lg">
-                <div class="badge badge-info badge-sm mt-1">
-                  <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                </div>
-                <div>
-                  <p class="font-semibold text-base-content">Secure Payment</p>
-                  <p class="text-base-content/70 text-sm">Your payment information is protected</p>
-                </div>
-              </div>
-              <div class="flex items-start space-x-3 p-3 bg-warning/10 rounded-lg">
-                <div class="badge badge-warning badge-sm mt-1">
-                  <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                </div>
-                <div>
-                  <p class="font-semibold text-base-content">Meet in Public</p>
-                  <p class="text-base-content/70 text-sm">Always meet in a safe, public location</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Rental Policies -->
-        <div class="card bg-base-100 shadow-xl">
-          <div class="card-body">
-            <h3 class="card-title text-xl mb-4 flex items-center">
-              <svg class="h-5 w-5 mr-2 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Rental Policies
-            </h3>
-            <div class="space-y-3">
-              <div class="flex items-start space-x-3 p-2 hover:bg-base-50 rounded-lg transition-colors">
-                <div class="w-2 h-2 bg-neutral rounded-full mt-2 flex-shrink-0"></div>
-                <p class="text-base-content/80 text-sm">Security deposit may be required</p>
-              </div>
-              <div class="flex items-start space-x-3 p-2 hover:bg-base-50 rounded-lg transition-colors">
-                <div class="w-2 h-2 bg-neutral rounded-full mt-2 flex-shrink-0"></div>
-                <p class="text-base-content/80 text-sm">Items must be returned in same condition</p>
-              </div>
-              <div class="flex items-start space-x-3 p-2 hover:bg-base-50 rounded-lg transition-colors">
-                <div class="w-2 h-2 bg-neutral rounded-full mt-2 flex-shrink-0"></div>
-                <p class="text-base-content/80 text-sm">Late fees may apply for overdue returns</p>
-              </div>
-              <div class="flex items-start space-x-3 p-2 hover:bg-base-50 rounded-lg transition-colors">
-                <div class="w-2 h-2 bg-neutral rounded-full mt-2 flex-shrink-0"></div>
-                <p class="text-base-content/80 text-sm">Cancellation policy varies by owner</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Enhanced Booking Modal -->
-    <div *ngIf="showBookingForm" class="modal modal-open">
-      <div class="modal-box w-11/12 max-w-lg">
-        <div class="flex justify-between items-center mb-6">
-          <div>
-            <h3 class="font-bold text-2xl text-base-content">Book {{ listing?.title }}</h3>
-            <p class="text-base-content/70 text-sm mt-1">Fill out the details below to send a booking request</p>
-          </div>
-          <button (click)="showBookingForm = false" class="btn btn-sm btn-circle btn-ghost">
-            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+        <!-- Submit Button -->
+        <div class="flex gap-3 pt-4">
+          <button
+            type="button"
+            (click)="showBookingForm = false"
+            class="btn btn-outline border-slate-300 text-slate-700 hover:bg-slate-100 flex-1"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="!bookingRequest.startDate || !bookingRequest.endDate"
+            class="btn btn-primary bg-slate-900 hover:bg-slate-800 border-slate-900 text-white flex-1"
+          >
+            Send Booking Request
           </button>
         </div>
-
-        <form (ngSubmit)="submitBookingRequest()" class="space-y-6">
-          <!-- Date Selection -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text font-semibold">Start Date</span>
-                <span class="label-text-alt text-error">*</span>
-              </label>
-              <input type="date"
-                     [(ngModel)]="bookingRequest.startDate"
-                     name="startDate"
-                     [min]="minDate"
-                     (change)="calculateTotal()"
-                     class="input input-bordered w-full focus:input-neutral"
-                     required>
-            </div>
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text font-semibold">End Date</span>
-                <span class="label-text-alt text-error">*</span>
-              </label>
-              <input type="date"
-                     [(ngModel)]="bookingRequest.endDate"
-                     name="endDate"
-                     [min]="minEndDate"
-                     (change)="calculateTotal()"
-                     class="input input-bordered w-full focus:input-neutral"
-                     required>
-            </div>
-          </div>
-
-          <!-- Delivery Option -->
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text font-semibold">Delivery Option</span>
-              <span class="label-text-alt text-error">*</span>
-            </label>
-            <div class="space-y-3">
-              <label *ngIf="listing?.deliveryOptions?.pickup"
-                     class="label cursor-pointer justify-start p-4 bg-base-50 rounded-lg">
-                <input type="radio"
-                       [(ngModel)]="bookingRequest.deliveryOption"
-                       name="deliveryOption"
-                       value="pickup"
-                       (change)="calculateTotal()"
-                       class="radio radio-neutral mr-4">
-                <div class="flex-1">
-                  <div class="flex items-center gap-2">
-                    <svg class="w-5 h-5 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span class="label-text font-medium">Self Pickup</span>
-                    <div class="badge badge-success badge-sm">Free</div>
-                  </div>
-                  <p class="text-xs text-base-content/60 mt-1">Pick up the item from seller's location</p>
-                </div>
-              </label>
-              <label *ngIf="listing?.deliveryOptions?.delivery"
-                     class="label cursor-pointer justify-start p-4 bg-base-50 rounded-lg">
-                <input type="radio"
-                       [(ngModel)]="bookingRequest.deliveryOption"
-                       name="deliveryOption"
-                       value="delivery"
-                       (change)="calculateTotal()"
-                       class="radio radio-neutral mr-4">
-                <div class="flex-1">
-                  <div class="flex items-center gap-2">
-                    <svg class="w-5 h-5 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2v0M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                    </svg>
-                    <span class="label-text font-medium">Home Delivery</span>
-                    <div class="badge badge-neutral badge-sm">
-                      {{ listing?.deliveryOptions?.deliveryFee ? 'Rs' + listing?.deliveryOptions?.deliveryFee : 'Contact seller' }}
-                    </div>
-                  </div>
-                  <p class="text-xs text-base-content/60 mt-1">Item will be delivered to your address</p>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <!-- Message -->
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text font-semibold">Message</span>
-              <span class="label-text-alt text-base-content/60">Optional</span>
-            </label>
-            <textarea [(ngModel)]="bookingRequest.message"
-                      name="message"
-                      rows="4"
-                      placeholder="Any special requirements, questions, or additional information..."
-                      class="textarea textarea-bordered focus:textarea-neutral resize-none"></textarea>
-          </div>
-
-          <!-- Total Cost Breakdown -->
-          <div *ngIf="bookingRequest.totalAmount == 0" class="alert bg-neutral/10 border-neutral/20">
-            <div class="w-full">
-              <div class="flex justify-between items-center mb-2">
-                <span class="font-medium">Rental Cost</span>
-                <span>Rs{{ bookingRequest.totalAmount - (listing.price || 0) }}</span>
-              </div>
-              <div *ngIf="bookingRequest.deliveryOption === 'delivery' && listing?.price"
-                   class="flex justify-between items-center mb-2">
-                <span class="font-medium">Delivery Fee</span>
-                <span>Rs{{ listing.price }}</span>
-              </div>
-              <div class="divider my-2"></div>
-              <div class="flex justify-between items-center">
-                <span class="font-bold text-lg">Total Amount </span>
-                <span class="font-bold text-xl text-neutral"> Rs{{ bookingRequest.totalAmount }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="modal-action">
-            <button type="button" (click)="showBookingForm = false" class="btn btn-ghost">
-              Cancel
-            </button>
-            <button type="submit" class="btn btn-neutral btn-wide">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
-              Send Booking Request
-            </button>
-          </div>
-        </form>
-      </div>
-      <div class="modal-backdrop" (click)="showBookingForm = false"></div>
+      </form>
     </div>
+    <form method="dialog" class="modal-backdrop">
+      <button (click)="showBookingForm = false">close</button>
+    </form>
+  </dialog>
+</div>
+
+<!-- Error State -->
+<div *ngIf="!isLoading && !listing" class="min-h-screen bg-slate-50 flex items-center justify-center">
+  <div class="text-center">
+    <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    <h2 class="text-xl font-semibold text-slate-900 mb-2">Product Not Found</h2>
+    <p class="text-slate-600 mb-4">The product you're looking for doesn't exist or has been removed.</p>
+    <button
+      routerLink="/"
+      class="btn btn-primary bg-slate-900 hover:bg-slate-800 border-slate-900 text-white"
+    >
+      Back to Home
+    </button>
   </div>
 </div>

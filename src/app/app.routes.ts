@@ -12,6 +12,9 @@ import { SearchResultsComponent } from './pages/search-result/search-result.comp
 import { ProductsByCategoryComponent } from './pages/category-products/category-products.component';
 import { VisitorUserProfileComponent } from './pages/visitor-user-profile/visitor-user-profile.component';
 import { AdminDashboardComponent } from './pages/admin-profile/admin-profile.component';
+import { ReportPageComponent } from './pages/report-user/report-user.component';
+import { AdminGuardService } from './services/administrator/admin-guard.service';
+import { ChangePasswordComponent } from './pages/reset-password/reset-password.component';
 
 
 export const routes: Routes = [
@@ -19,6 +22,10 @@ export const routes: Routes = [
 
   { path:'register', component:RegisterComponent},
   { path:'forgot-password', component:ForgetComponent},
+  {
+    path: 'reset-password/:token',
+    component: ChangePasswordComponent
+  },
   { path:'', component:HomeComponent},
   { path:'how-it-works', component:HowItWorksComponent},
   { path:'list-equipment',
@@ -27,6 +34,11 @@ export const routes: Routes = [
      .then(m=> m.ProductListingFormComponent)
     },
   {
+    path:"adminstrator",
+    canActivate:[AdminGuardService],
+    component:AdminDashboardComponent
+  },
+    {
     path:'profile',
     canActivate:[AuthGuardService],
     component:ProfileComponent,
@@ -42,7 +54,7 @@ export const routes: Routes = [
     ]
   },
    {path:"search",component:SearchResultsComponent},
-   {path:"adminstrator", component:AdminDashboardComponent},
+   {path:"report/:type/:id",component:ReportPageComponent},
   { path:'products/:id',component:ProductPageComponent},
   { path:'products/category/:category',component:ProductsByCategoryComponent},
    { path:'users/:id',component:VisitorUserProfileComponent},

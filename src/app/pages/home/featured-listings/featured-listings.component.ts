@@ -89,12 +89,12 @@ export class FeaturedListingsComponent implements OnInit{
 
   // Categories with Lucide icons
   categories: CategoryItem[] = [
-    { name: 'All', icon: Grid3X3 },
-    { name: 'Photography', icon: Camera },
-    { name: 'Tools', icon: Wrench },
-    { name: 'Vehicles', icon: Car },
-    { name: 'Audio', icon: Headphones },
-    { name: 'Sports', icon: Trophy }
+    { name: 'Top Products', icon: Grid3X3 },
+    // { name: 'Photography', icon: Camera },
+    // { name: 'Tools', icon: Wrench },
+    // { name: 'Vehicles', icon: Car },
+    // { name: 'Audio', icon: Headphones },
+    // { name: 'Sports', icon: Trophy }
   ];
 
   listings: Listing[] = [];

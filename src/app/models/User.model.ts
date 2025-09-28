@@ -10,7 +10,7 @@ export type User = {
   nationalId?: string;
   nICVerified?: boolean;
   emailVerified?: boolean;
-  status?: 'ACTIVE' | 'INACTIVE' | 'BANNED'; // adjust to match your `Status` enum
+  status?:  'ACTIVE' | 'INACTIVE' | 'BANNED'; // adjust to match your `Status` enum
   profilePicUrl?: string; // Or `Blob | null` if you're returning it directly
   createdAt?:Date;
   totalRating?: number;
@@ -24,5 +24,7 @@ export type User = {
   address?:Address;
   dateOfBirth?:Date,
   website?:string,
+  reports?:number,
+  role?:string,
 
 }

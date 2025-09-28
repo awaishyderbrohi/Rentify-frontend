@@ -3,36 +3,21 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Subject, takeUntil } from 'rxjs';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { User } from '../../models/User.model';
+import { AdministratorService } from '../../services/administrator/administrator.service';
+import { Listing } from '../profile/my-listings/my-listings.component';
 
-interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  emailVerified: boolean;
-  phoneNumber?: string;
-  createdAt: Date;
-  status: 'active' | 'suspended' | 'banned';
-  totalListings: number;
-  totalRentals: number;
-  reportCount: number;
+interface LocationCoordinates {
+  lat: number;
+  lng: number;
 }
 
-interface Listing {
-  id: string;
-  title: string;
-  category: string;
-  pricePerDay: number;
-  owner: {
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-  status: 'active' | 'inactive' | 'reported' | 'banned';
-  createdAt: Date;
-  totalRentals: number;
-  reportCount: number;
-  availability: 'available' | 'rented' | 'maintenance';
+interface DeliveryOptions {
+  pickup: boolean;
+  delivery: boolean;
+  shipping: boolean;
 }
 
 interface Activity {
@@ -70,7 +55,7 @@ interface PlatformStats {
   totalReports: number;
   activeUsers: number;
   pendingReports: number;
-  platformCommission: number;
+  monthlyRevenue: number;
   userGrowth: number;
 }
 
@@ -78,432 +63,7 @@ interface PlatformStats {
   selector: 'app-admin-dashboard',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  template: `
-    <div class="min-h-screen bg-slate-50 p-6">
-      <div class="max-w-7xl mx-auto">
-        <!-- Header -->
-        <div class="mb-8">
-          <h1 class="text-4xl font-bold text-slate-900 mb-2">Platform Administration</h1>
-          <p class="text-slate-600">Manage users, listings, and monitor rental platform activity</p>
-        </div>
-
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div class="stats shadow-sm bg-white border border-slate-200">
-            <div class="stat">
-              <div class="stat-figure text-slate-600">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
-              </div>
-              <div class="stat-title text-slate-600">Total Users</div>
-              <div class="stat-value text-slate-900">{{ stats().totalUsers | number }}</div>
-              <div class="stat-desc text-emerald-600">
-                <span class="font-medium">+{{ stats().userGrowth }}%</span> from last month
-              </div>
-            </div>
-          </div>
-
-          <div class="stats shadow-sm bg-white border border-slate-200">
-            <div class="stat">
-              <div class="stat-figure text-slate-600">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                </svg>
-              </div>
-              <div class="stat-title text-slate-600">Active Listings</div>
-              <div class="stat-value text-slate-900">{{ stats().totalListings | number }}</div>
-              <div class="stat-desc text-slate-500">{{ stats().activeUsers }} active owners</div>
-            </div>
-          </div>
-
-          <div class="stats shadow-sm bg-white border border-slate-200">
-            <div class="stat">
-              <div class="stat-figure text-slate-600">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                </svg>
-              </div>
-              <div class="stat-title text-slate-600">Active Rentals</div>
-              <div class="stat-value text-slate-900">{{ stats().activeRentals | number }}</div>
-              <div class="stat-desc text-slate-500">Currently ongoing</div>
-            </div>
-          </div>
-
-          <div class="stats shadow-sm bg-white border border-slate-200">
-            <div class="stat">
-              <div class="stat-figure text-orange-500">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"></path>
-                </svg>
-              </div>
-              <div class="stat-title text-slate-600">Pending Reports</div>
-              <div class="stat-value text-slate-900">{{ stats().pendingReports | number }}</div>
-              <div class="stat-desc text-slate-500">{{ stats().totalReports }} total reports</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Navigation Tabs -->
-        <div class="tabs tabs-boxed bg-white shadow-sm border border-slate-200 mb-6 p-1">
-          @for (tab of tabs; track tab.id) {
-            <button
-              (click)="activeTab.set(tab.id)"
-              class="tab transition-colors duration-200"
-              [class.tab-active]="activeTab() === tab.id"
-              [class.bg-slate-700]="activeTab() === tab.id"
-              [class.text-white]="activeTab() === tab.id"
-              [class.text-slate-600]="activeTab() !== tab.id"
-            >
-              {{ tab.label }}
-            </button>
-          }
-        </div>
-
-        <!-- Users Management -->
-        @if (activeTab() === 'users') {
-          <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-            <div class="flex justify-between items-center mb-6">
-              <h2 class="text-2xl font-bold text-slate-900">User Management</h2>
-              <div class="join">
-                <input
-                  type="text"
-                  placeholder="Search users..."
-                  class="input input-bordered join-item w-64 border-slate-300 focus:border-slate-500"
-                  [(ngModel)]="userSearchTerm"
-                  (ngModelChange)="searchUsers()"
-                />
-                <button class="btn join-item bg-slate-700 hover:bg-slate-800 text-white border-slate-700">Search</button>
-              </div>
-            </div>
-
-            <div class="overflow-x-auto">
-              <table class="table table-zebra">
-                <thead class="bg-slate-100">
-                  <tr class="text-slate-700">
-                    <th>User</th>
-                    <th>Email</th>
-                    <th>Status</th>
-                    <th>Listings</th>
-                    <th>Reports</th>
-                    <th>Joined</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (user of filteredUsers(); track user.id) {
-                    <tr class="hover:bg-slate-50">
-                      <td>
-                        <div class="flex items-center space-x-3">
-                          <div class="avatar placeholder">
-                            <div class="bg-slate-600 text-white rounded-full w-12 text-sm">
-                              <span>{{ user.firstName.charAt(0) + user.lastName.charAt(0) }}</span>
-                            </div>
-                          </div>
-                          <div>
-                            <div class="font-bold text-slate-900">{{ user.firstName }} {{ user.lastName }}</div>
-                            @if (user.phoneNumber) {
-                              <div class="text-sm text-slate-500">{{ user.phoneNumber }}</div>
-                            }
-                          </div>
-                        </div>
-                      </td>
-                      <td class="text-slate-700">
-                        {{ user.email }}
-                        @if (user.emailVerified) {
-                          <span class="badge badge-success badge-xs ml-2">Verified</span>
-                        } @else {
-                          <span class="badge badge-warning badge-xs ml-2">Unverified</span>
-                        }
-                      </td>
-                      <td>
-                        <span class="badge" [class]="getUserStatusClass(user.status)">
-                          {{ user.status | titlecase }}
-                        </span>
-                      </td>
-                      <td class="text-slate-700">{{ user.totalListings }}</td>
-                      <td>
-                        @if (user.reportCount > 0) {
-                          <span class="badge badge-error">{{ user.reportCount }}</span>
-                        } @else {
-                          <span class="text-slate-500">0</span>
-                        }
-                      </td>
-                      <td class="text-slate-600">{{ user.createdAt | date:'short' }}</td>
-                      <td>
-                        <div class="dropdown dropdown-end">
-                          <button class="btn btn-sm btn-ghost text-slate-600 hover:text-slate-900" tabindex="0">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zM12 13a1 1 0 110-2 1 1 0 010 2zM12 20a1 1 0 110-2 1 1 0 010 2z"></path>
-                            </svg>
-                          </button>
-                          <ul class="dropdown-content menu p-2 shadow-lg bg-white rounded-box w-52 border border-slate-200">
-                            <li><button (click)="viewUser(user)" class="text-slate-700 hover:text-slate-900">View Details</button></li>
-                            @if (user.status === 'active') {
-                              <li><button (click)="suspendUser(user)" class="text-orange-600 hover:text-orange-700">Suspend</button></li>
-                            }
-                            @if (user.status === 'suspended') {
-                              <li><button (click)="activateUser(user)" class="text-emerald-600 hover:text-emerald-700">Activate</button></li>
-                            }
-                            <li><button (click)="banUser(user)" class="text-red-600 hover:text-red-700">Ban</button></li>
-                          </ul>
-                        </div>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>
-        }
-
-        <!-- Listings Management -->
-        @if (activeTab() === 'listings') {
-          <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-            <div class="flex justify-between items-center mb-6">
-              <h2 class="text-2xl font-bold text-slate-900">Listing Management</h2>
-              <div class="join">
-                <input
-                  type="text"
-                  placeholder="Search listings..."
-                  class="input input-bordered join-item w-64 border-slate-300 focus:border-slate-500"
-                  [(ngModel)]="listingSearchTerm"
-                  (ngModelChange)="searchListings()"
-                />
-                <select class="select select-bordered join-item border-slate-300 focus:border-slate-500">
-                  <option value="">All Categories</option>
-                  <option value="electronics">Electronics</option>
-                  <option value="tools">Tools</option>
-                  <option value="vehicles">Vehicles</option>
-                  <option value="furniture">Furniture</option>
-                  <option value="sports">Sports Equipment</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="overflow-x-auto">
-              <table class="table table-zebra">
-                <thead class="bg-slate-100">
-                  <tr class="text-slate-700">
-                    <th>Listing</th>
-                    <th>Owner</th>
-                    <th>Price/Day</th>
-                    <th>Status</th>
-                    <th>Availability</th>
-                    <th>Reports</th>
-                    <th>Created</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (listing of filteredListings(); track listing.id) {
-                    <tr class="hover:bg-slate-50">
-                      <td>
-                        <div>
-                          <div class="font-bold text-slate-900">{{ listing.title }}</div>
-                          <div class="text-sm text-slate-500">{{ listing.category | titlecase }}</div>
-                        </div>
-                      </td>
-                      <td>
-                        <div>
-                          <div class="font-medium text-slate-900">{{ listing.owner.firstName }} {{ listing.owner.lastName }}</div>
-                          <div class="text-sm text-slate-500">{{ listing.owner.email }}</div>
-                        </div>
-                      </td>
-                      <td class="font-bold text-slate-900">Rs{{ listing.pricePerDay }}</td>
-                      <td>
-                        <span class="badge" [class]="getListingStatusClass(listing.status)">
-                          {{ listing.status | titlecase }}
-                        </span>
-                      </td>
-                      <td>
-                        <span class="badge" [class]="getAvailabilityClass(listing.availability)">
-                          {{ listing.availability | titlecase }}
-                        </span>
-                      </td>
-                      <td>
-                        @if (listing.reportCount > 0) {
-                          <span class="badge badge-error">{{ listing.reportCount }}</span>
-                        } @else {
-                          <span class="text-slate-500">0</span>
-                        }
-                      </td>
-                      <td class="text-slate-600">{{ listing.createdAt | date:'short' }}</td>
-                      <td>
-                        <div class="dropdown dropdown-end">
-                          <button class="btn btn-sm btn-ghost text-slate-600 hover:text-slate-900" tabindex="0">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zM12 13a1 1 0 110-2 1 1 0 010 2zM12 20a1 1 0 110-2 1 1 0 010 2z"></path>
-                            </svg>
-                          </button>
-                          <ul class="dropdown-content menu p-2 shadow-lg bg-white rounded-box w-52 border border-slate-200">
-                            <li><button (click)="viewListing(listing)" class="text-slate-700 hover:text-slate-900">View Details</button></li>
-                            @if (listing.status === 'active') {
-                              <li><button (click)="deactivateListing(listing)" class="text-orange-600 hover:text-orange-700">Deactivate</button></li>
-                            }
-                            @if (listing.status === 'inactive') {
-                              <li><button (click)="activateListing(listing)" class="text-emerald-600 hover:text-emerald-700">Activate</button></li>
-                            }
-                            <li><button (click)="banListing(listing)" class="text-red-600 hover:text-red-700">Ban</button></li>
-                          </ul>
-                        </div>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>
-        }
-
-        <!-- Activities -->
-        @if (activeTab() === 'activities') {
-          <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-            <div class="flex justify-between items-center mb-6">
-              <h2 class="text-2xl font-bold text-slate-900">Recent Activities</h2>
-              <select
-                class="select select-bordered border-slate-300 focus:border-slate-500"
-                [(ngModel)]="activityFilter"
-                (ngModelChange)="filterActivities()"
-              >
-                <option value="">All Activities</option>
-                <option value="user_registration">User Registrations</option>
-                <option value="listing_created">Listings Created</option>
-                <option value="rental_completed">Rentals Completed</option>
-                <option value="report_submitted">Reports Submitted</option>
-                <option value="payment_processed">Payments Processed</option>
-              </select>
-            </div>
-
-            <div class="space-y-4">
-              @for (activity of filteredActivities(); track activity.id) {
-                <div class="alert shadow-sm bg-slate-50 border border-slate-200">
-                  <div class="flex items-start space-x-4 w-full">
-                    <div class="avatar placeholder">
-                      <div class="bg-slate-600 text-white rounded-full w-10">
-                        <span class="text-sm">{{ activity.user.firstName.charAt(0) }}</span>
-                      </div>
-                    </div>
-                    <div class="flex-1">
-                      <div class="font-medium text-slate-900">{{ activity.description }}</div>
-                      <div class="text-sm text-slate-500 mt-1">
-                        by {{ activity.user.firstName }} {{ activity.user.lastName }} •
-                        {{ activity.timestamp | date:'short' }}
-                      </div>
-                    </div>
-                    <div class="badge" [class]="getActivityBadgeClass(activity.type)">
-                      {{ activity.type.replace('_', ' ') | titlecase }}
-                    </div>
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- Reports -->
-        @if (activeTab() === 'reports') {
-          <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-            <div class="flex justify-between items-center mb-6">
-              <h2 class="text-2xl font-bold text-slate-900">Reports Management</h2>
-              <div class="join">
-                <select
-                  class="select select-bordered join-item border-slate-300 focus:border-slate-500"
-                  [(ngModel)]="reportFilter"
-                  (ngModelChange)="filterReports()"
-                >
-                  <option value="">All Reports</option>
-                  <option value="pending">Pending</option>
-                  <option value="resolved">Resolved</option>
-                  <option value="dismissed">Dismissed</option>
-                </select>
-                <select class="select select-bordered join-item border-slate-300 focus:border-slate-500">
-                  <option value="">All Priorities</option>
-                  <option value="high">High Priority</option>
-                  <option value="medium">Medium Priority</option>
-                  <option value="low">Low Priority</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="grid gap-4">
-              @for (report of filteredReports(); track report.id) {
-                <div class="card bg-slate-50 shadow-sm border border-slate-200">
-                  <div class="card-body">
-                    <div class="flex justify-between items-start">
-                      <div class="flex-1">
-                        <div class="flex items-center space-x-2 mb-2">
-                          <span class="badge badge-outline border-slate-300 text-slate-700">{{ report.type | titlecase }}</span>
-                          <span class="badge" [class]="getReportStatusClass(report.status)">
-                            {{ report.status | titlecase }}
-                          </span>
-                          <span class="badge" [class]="getPriorityClass(report.priority)">
-                            {{ report.priority | titlecase }}
-                          </span>
-                        </div>
-                        <h3 class="font-bold text-lg text-slate-900">{{ report.reason }}</h3>
-                        <p class="text-sm text-slate-600 mb-3">{{ report.description }}</p>
-                        <div class="text-sm text-slate-500">
-                          <span class="font-medium">Reported by:</span>
-                          {{ report.reportedBy.firstName }} {{ report.reportedBy.lastName }}
-                          <span class="mx-2">•</span>
-                          <span>{{ report.createdAt | date:'short' }}</span>
-                        </div>
-                      </div>
-                      @if (report.status === 'pending') {
-                        <div class="flex space-x-2">
-                          <button (click)="resolveReport(report)" class="btn btn-success btn-sm">Resolve</button>
-                          <button (click)="dismissReport(report)" class="btn btn-warning btn-sm">Dismiss</button>
-                          <button (click)="viewReportDetails(report)" class="btn btn-ghost btn-sm text-slate-600">Details</button>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- Analytics -->
-        @if (activeTab() === 'analytics') {
-          <div class="space-y-6">
-            <!-- Platform Performance -->
-            <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-              <h3 class="text-xl font-bold text-slate-900 mb-4">Platform Performance</h3>
-              <div class="h-64 flex items-center justify-center bg-slate-50 rounded border border-slate-200">
-                <p class="text-slate-500">Platform analytics chart would be implemented here</p>
-              </div>
-            </div>
-
-            <!-- User Growth Chart -->
-            <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-              <h3 class="text-xl font-bold text-slate-900 mb-4">User Growth</h3>
-              <div class="h-64 flex items-center justify-center bg-slate-50 rounded border border-slate-200">
-                <p class="text-slate-500">User growth chart would be implemented here</p>
-              </div>
-            </div>
-
-            <!-- Category Performance -->
-            <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-              <h3 class="text-xl font-bold text-slate-900 mb-4">Category Performance</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                @for (category of categoryStats; track category.name) {
-                  <div class="stats shadow-sm bg-slate-50 border border-slate-200">
-                    <div class="stat">
-                      <div class="stat-title text-slate-600">{{ category.name }}</div>
-                      <div class="stat-value text-sm text-slate-900">{{ category.listings }} listings</div>
-                      <div class="stat-desc text-slate-500">{{ category.activeRentals }} active rentals</div>
-                    </div>
-                  </div>
-                }
-              </div>
-            </div>
-          </div>
-        }
-      </div>
-    </div>
-  `
+  templateUrl: `./admin-profile.component.html`
 })
 export class AdminDashboardComponent implements OnInit, OnDestroy {
   activeTab = signal('users');
@@ -523,7 +83,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     totalReports: 23,
     activeUsers: 892,
     pendingReports: 8,
-    platformCommission: 15420,
+    monthlyRevenue: 245000,
     userGrowth: 12.5
   });
 
@@ -545,21 +105,22 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     { name: 'Vehicles', listings: 156, activeRentals: 78 },
     { name: 'Furniture', listings: 134, activeRentals: 34 },
     { name: 'Sports Equipment', listings: 98, activeRentals: 23 },
-    { name: 'Appliances', listings: 76, activeRentals: 19 }
+    { name: 'Appliances', listings: 76, activeRentals: 19 },
   ];
 
   tabs = [
+    { id: 'analytics', label: 'Analytics' },
     { id: 'users', label: 'Users' },
     { id: 'listings', label: 'Listings' },
     { id: 'activities', label: 'Activities' },
-    { id: 'reports', label: 'Reports' },
-    { id: 'analytics', label: 'Analytics' }
+    { id: 'reports', label: 'Reports' }
   ];
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,private adminService:AdministratorService) {}
 
   ngOnInit() {
-    this.loadMockData();
+    this.loadData();
+
   }
 
   ngOnDestroy() {
@@ -567,300 +128,68 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private loadMockData() {
+  private loadData() {
     // Mock users data
-    const mockUsers: User[] = [
-      {
-        id: '1',
-        firstName: 'Ahmed',
-        lastName: 'Khan',
-        email: 'ahmed.khan@example.com',
-        emailVerified: true,
-        phoneNumber: '+92-300-1234567',
-        createdAt: new Date('2024-01-15'),
-        status: 'active',
-        totalListings: 5,
-        totalRentals: 12,
-        reportCount: 0
-      },
-      {
-        id: '2',
-        firstName: 'Fatima',
-        lastName: 'Ali',
-        email: 'fatima.ali@example.com',
-        emailVerified: false,
-        phoneNumber: '+92-301-7654321',
-        createdAt: new Date('2024-02-20'),
-        status: 'suspended',
-        totalListings: 3,
-        totalRentals: 8,
-        reportCount: 2
-      },
-      {
-        id: '3',
-        firstName: 'Hassan',
-        lastName: 'Sheikh',
-        email: 'hassan.sheikh@example.com',
-        emailVerified: true,
-        createdAt: new Date('2024-03-10'),
-        status: 'active',
-        totalListings: 8,
-        totalRentals: 25,
-        reportCount: 0
-      }
-    ];
 
-    // Mock listings data
-    const mockListings: Listing[] = [
-      {
-        id: '1',
-        title: 'Professional DSLR Camera Kit',
-        category: 'electronics',
-        pricePerDay: 150,
-        owner: {
-          firstName: 'Ahmed',
-          lastName: 'Khan',
-          email: 'ahmed.khan@example.com'
-        },
-        status: 'active',
-        createdAt: new Date('2024-01-20'),
-        totalRentals: 8,
-        reportCount: 0,
-        availability: 'available'
-      },
-      {
-        id: '2',
-        title: 'Power Drill Set',
-        category: 'tools',
-        pricePerDay: 75,
-        owner: {
-          firstName: 'Hassan',
-          lastName: 'Sheikh',
-          email: 'hassan.sheikh@example.com'
-        },
-        status: 'active',
-        createdAt: new Date('2024-02-15'),
-        totalRentals: 15,
-        reportCount: 0,
-        availability: 'rented'
-      },
-      {
-        id: '3',
-        title: 'Mountain Bike',
-        category: 'vehicles',
-        pricePerDay: 200,
-        owner: {
-          firstName: 'Fatima',
-          lastName: 'Ali',
-          email: 'fatima.ali@example.com'
-        },
-        status: 'reported',
-        createdAt: new Date('2024-03-01'),
-        totalRentals: 3,
-        reportCount: 1,
-        availability: 'maintenance'
+    this.adminService.getAllUsers().subscribe({
+      next:(res)=>{
+        let fetchedUsers:User[]=[]
+        fetchedUsers= res.t;
+        this.users.set(fetchedUsers);
+        this.filteredUsers.set(fetchedUsers);
+        this.stats.update(current => ({
+        ...current,
+        totalUsers: fetchedUsers.length,
+        monthlyRevenue: 200000
+      }));
       }
-    ];
+    })
+
+    this.adminService.getAllListings().subscribe({
+      next:(res)=>{
+        let fetchListings: Listing[];
+        fetchListings= res.t;
+        this.listings.set(fetchListings);
+        this.filteredListings.set(fetchListings);
+      }
+    })
+
+
+
 
     // Mock activities
-    const mockActivities: Activity[] = [
-      {
-        id: '1',
-        type: 'user_registration',
-        description: 'New user registered on the platform',
-        user: { firstName: 'Sara', lastName: 'Ahmed' },
-        timestamp: new Date(Date.now() - 1000 * 60 * 30) // 30 minutes ago
-      },
-      {
-        id: '2',
-        type: 'listing_created',
-        description: 'Created new listing "Gaming Console PS5"',
-        user: { firstName: 'Ali', lastName: 'Hassan' },
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2) // 2 hours ago
-      },
-      {
-        id: '3',
-        type: 'rental_completed',
-        description: 'Completed rental for "Professional Camera"',
-        user: { firstName: 'Zain', lastName: 'Malik' },
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4) // 4 hours ago
-      },
-      {
-        id: '4',
-        type: 'payment_processed',
-        description: 'Payment processed for rental transaction',
-        user: { firstName: 'Ayesha', lastName: 'Khan' },
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6) // 6 hours ago
-      },
-      {
-        id: '5',
-        type: 'report_submitted',
-        description: 'Report submitted against user behavior',
-        user: { firstName: 'Omar', lastName: 'Sheikh' },
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 8) // 8 hours ago
-      }
-    ];
+    const mockActivities: Activity[] = [];
 
     // Mock reports
-    const mockReports: Report[] = [
-      {
-        id: '1',
-        type: 'user',
-        reportedId: '2',
-        reportedBy: { firstName: 'Ahmed', lastName: 'Khan' },
-        reason: 'Inappropriate behavior during rental',
-        description: 'User was rude and uncooperative during the rental handover process. Did not follow agreed terms.',
-        status: 'pending',
-        priority: 'high',
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12) // 12 hours ago
-      },
-      {
-        id: '2',
-        type: 'listing',
-        reportedId: '3',
-        reportedBy: { firstName: 'Hassan', lastName: 'Sheikh' },
-        reason: 'Misleading item description',
-        description: 'The bike condition was much worse than described. Several parts were damaged.',
-        status: 'pending',
-        priority: 'medium',
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 18) // 18 hours ago
-      },
-      {
-        id: '3',
-        type: 'user',
-        reportedId: '1',
-        reportedBy: { firstName: 'Fatima', lastName: 'Ali' },
-        reason: 'Late return of item',
-        description: 'User returned the camera 2 days late without prior notice or communication.',
-        status: 'resolved',
-        priority: 'low',
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2) // 2 days ago
-      },
-      {
-        id: '4',
-        type: 'listing',
-        reportedId: '1',
-        reportedBy: { firstName: 'Sara', lastName: 'Ahmed' },
-        reason: 'Safety concerns',
-        description: 'The camera equipment appears to have electrical issues that could be dangerous.',
-        status: 'dismissed',
-        priority: 'high',
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3) // 3 days ago
-      }
-    ];
+    const mockReports: Report[] = [];
 
-    this.users.set(mockUsers);
-    this.filteredUsers.set(mockUsers);
-
-    this.listings.set(mockListings);
-    this.filteredListings.set(mockListings);
 
     this.activities.set(mockActivities);
     this.filteredActivities.set(mockActivities);
-
     this.reports.set(mockReports);
     this.filteredReports.set(mockReports);
   }
 
-  // User management methods
+  // Search methods
   searchUsers() {
+    const term = this.userSearchTerm.toLowerCase();
     const filtered = this.users().filter(user =>
-      user.firstName.toLowerCase().includes(this.userSearchTerm.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(this.userSearchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(this.userSearchTerm.toLowerCase())
+      (user.firstName?.toLowerCase().includes(term) || false) ||
+      (user.lastName?.toLowerCase().includes(term) || false) ||
+      (user.email?.toLowerCase().includes(term) || false)
     );
     this.filteredUsers.set(filtered);
   }
 
-  suspendUser(user: User) {
-    // API call would go here
-    const users = this.users();
-    const index = users.findIndex(u => u.id === user.id);
-    if (index !== -1) {
-      users[index].status = 'suspended';
-      this.users.set([...users]);
-      this.searchUsers(); // Refresh filtered list
-    }
-    console.log('Suspending user:', user);
-  }
-
-  activateUser(user: User) {
-    // API call would go here
-    const users = this.users();
-    const index = users.findIndex(u => u.id === user.id);
-    if (index !== -1) {
-      users[index].status = 'active';
-      this.users.set([...users]);
-      this.searchUsers(); // Refresh filtered list
-    }
-    console.log('Activating user:', user);
-  }
-
-  banUser(user: User) {
-    // API call would go here
-    const users = this.users();
-    const index = users.findIndex(u => u.id === user.id);
-    if (index !== -1) {
-      users[index].status = 'banned';
-      this.users.set([...users]);
-      this.searchUsers(); // Refresh filtered list
-    }
-    console.log('Banning user:', user);
-  }
-
-  viewUser(user: User) {
-    console.log('Viewing user details:', user);
-    // Navigate to user detail view or open modal
-  }
-
-  // Listing management methods
   searchListings() {
+    const term = this.listingSearchTerm.toLowerCase();
     const filtered = this.listings().filter(listing =>
-      listing.title.toLowerCase().includes(this.listingSearchTerm.toLowerCase()) ||
-      listing.category.toLowerCase().includes(this.listingSearchTerm.toLowerCase())
+      listing.title.toLowerCase().includes(term) ||
+      listing.category.toLowerCase().includes(term)
     );
     this.filteredListings.set(filtered);
   }
 
-  deactivateListing(listing: Listing) {
-    const listings = this.listings();
-    const index = listings.findIndex(l => l.id === listing.id);
-    if (index !== -1) {
-      listings[index].status = 'inactive';
-      this.listings.set([...listings]);
-      this.searchListings(); // Refresh filtered list
-    }
-    console.log('Deactivating listing:', listing);
-  }
-
-  activateListing(listing: Listing) {
-    const listings = this.listings();
-    const index = listings.findIndex(l => l.id === listing.id);
-    if (index !== -1) {
-      listings[index].status = 'active';
-      this.listings.set([...listings]);
-      this.searchListings(); // Refresh filtered list
-    }
-    console.log('Activating listing:', listing);
-  }
-
-  banListing(listing: Listing) {
-    const listings = this.listings();
-    const index = listings.findIndex(l => l.id === listing.id);
-    if (index !== -1) {
-      listings[index].status = 'banned';
-      this.listings.set([...listings]);
-      this.searchListings(); // Refresh filtered list
-    }
-    console.log('Banning listing:', listing);
-  }
-
-  viewListing(listing: Listing) {
-    console.log('Viewing listing details:', listing);
-    // Navigate to listing detail view or open modal
-  }
-
-  // Activity filtering
   filterActivities() {
     if (this.activityFilter) {
       const filtered = this.activities().filter(activity =>
@@ -872,7 +201,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Report management
   filterReports() {
     if (this.reportFilter) {
       const filtered = this.reports().filter(report =>
@@ -884,15 +212,47 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Action methods
+  suspendUser(user: User) {
+    console.log('Suspending user:', user);
+  }
+
+  activateUser(user: User) {
+    console.log('Activating user:', user);
+  }
+
+  banUser(user: User) {
+    console.log('Banning user:', user);
+  }
+
+  viewUser(user: User) {
+    console.log('Viewing user details:', user);
+  }
+
+  deactivateListing(listing: Listing) {
+    console.log('Deactivating listing:', listing);
+  }
+
+  activateListing(listing: Listing) {
+    console.log('Activating listing:', listing);
+  }
+
+  banListing(listing: Listing) {
+    console.log('Banning listing:', listing);
+  }
+
+  viewListing(listing: Listing) {
+    console.log('Viewing listing details:', listing);
+  }
+
   resolveReport(report: Report) {
     const reports = this.reports();
     const index = reports.findIndex(r => r.id === report.id);
     if (index !== -1) {
       reports[index].status = 'resolved';
       this.reports.set([...reports]);
-      this.filterReports(); // Refresh filtered list
+      this.filterReports();
     }
-    console.log('Resolving report:', report);
   }
 
   dismissReport(report: Report) {
@@ -901,71 +261,641 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     if (index !== -1) {
       reports[index].status = 'dismissed';
       this.reports.set([...reports]);
-      this.filterReports(); // Refresh filtered list
+      this.filterReports();
     }
-    console.log('Dismissing report:', report);
   }
 
   viewReportDetails(report: Report) {
     console.log('Viewing report details:', report);
-    // Navigate to report detail view or open modal
   }
 
-  // Utility methods for CSS classes
-  getUserStatusClass(status: string): string {
+
+
+// PDF Export Methods
+exportUsersPDF() {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+  const currentDate = new Date().toLocaleDateString();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  // === ENTERPRISE HEADER ===
+  // Background header bar
+  doc.setFillColor(15, 23, 42); // slate-900
+  doc.rect(0, 0, pageWidth, 90, 'F');
+
+  // Company logo area (placeholder)
+  doc.setFillColor(71, 85, 105); // slate-600
+  doc.roundedRect(40, 25, 40, 40, 4, 4, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.text('R', 57, 50);
+
+  // Main title
+  doc.setFontSize(24);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text('User Management Report', 100, 45);
+
+  // Subtitle
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(203, 213, 225); // slate-300
+  doc.text('Comprehensive User Analytics & Status Overview', 100, 62);
+
+  // === REPORT METADATA ===
+  const metaY = 120;
+  doc.setFillColor(248, 250, 252); // slate-50
+  doc.rect(40, metaY, pageWidth - 80, 50, 'F');
+  doc.setDrawColor(226, 232, 240); // slate-200
+  doc.setLineWidth(1);
+  doc.rect(40, metaY, pageWidth - 80, 50);
+
+  doc.setTextColor(71, 85, 105); // slate-600
+  doc.setFontSize(10);
+  doc.text(`Generated on: ${currentDate}`, 55, metaY + 20);
+  doc.text(`Report ID: USR-${Date.now().toString().slice(-6)}`, 55, metaY + 35);
+
+  const reportTime = new Date().toLocaleTimeString();
+  doc.text(`Time: ${reportTime}`, 300, metaY + 20);
+  doc.text('Classification: Internal Use', 300, metaY + 35);
+
+  // === ENHANCED SUMMARY SECTION ===
+  const activeUsers = this.filteredUsers().filter(u => u.status === 'ACTIVE').length;
+  const bannedUsers = this.filteredUsers().filter(u => u.status === 'BANNED').length;
+  const totalUsers = this.filteredUsers().length;
+  const verifiedUsers = this.filteredUsers().filter(u => u.emailVerified).length;
+
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(30, 41, 59); // slate-800
+  doc.text('Key Metrics', 40, 200);
+
+  const summaryY = 220;
+  const cardWidth = 120;
+  const cardHeight = 80;
+  const cardSpacing = 15;
+
+  const stats = [
+    {
+      label: "Total Users",
+      value: totalUsers,
+      bgColor: [51, 65, 85],   // slate-700
+      icon: "👥"
+    },
+    {
+      label: "Active Users",
+      value: activeUsers,
+      bgColor: [16, 185, 129], // emerald-500
+      percentage: totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0,
+      icon: "✅"
+    },
+    {
+      label: "Banned Users",
+      value: bannedUsers,
+      bgColor: [239, 68, 68],  // red-500
+      percentage: totalUsers > 0 ? Math.round((bannedUsers / totalUsers) * 100) : 0,
+      icon: "🚫"
+    },
+    {
+      label: "Email Verified",
+      value: verifiedUsers,
+      bgColor: [59, 130, 246], // blue-500
+      percentage: totalUsers > 0 ? Math.round((verifiedUsers / totalUsers) * 100) : 0,
+      icon: "📧"
+    }
+  ];
+
+  stats.forEach((stat, i) => {
+    const x = 40 + i * (cardWidth + cardSpacing);
+
+    // Card background with subtle shadow effect
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(x + 2, summaryY + 2, cardWidth, cardHeight, 8, 8, 'F'); // shadow
+    doc.setFillColor(stat.bgColor[0], stat.bgColor[1], stat.bgColor[2]);
+    doc.roundedRect(x, summaryY, cardWidth, cardHeight, 8, 8, 'F');
+
+    // Card content
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(28);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${stat.value}`, x + 15, summaryY + 35);
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(stat.label, x + 15, summaryY + 50);
+
+    // Percentage if available
+    if (stat.percentage !== undefined) {
+      doc.setFontSize(8);
+      doc.text(`${stat.percentage}%`, x + 15, summaryY + 65);
+    }
+  });
+
+  // === ENHANCED USER TABLE ===
+  const tableStartY = 340;
+
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(30, 41, 59); // slate-800
+  doc.text('User Directory', 40, tableStartY - 10);
+
+  const tableData = this.filteredUsers().map(user => [
+    `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'N/A',
+    user.email || 'N/A',
+    user.status || 'INACTIVE',
+    user.totalRentals?.toString() || '0',
+    user.reports?.toString() || '0',
+    user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A',
+    user.emailVerified ? 'Verified' : 'Pending'
+  ]);
+
+  autoTable(doc, {
+    head: [['Full Name', 'Email Address', 'Status', 'Rentals', 'Reports', 'Join Date', 'Email Status']],
+    body: tableData,
+    startY: tableStartY,
+    theme: 'grid',
+    styles: {
+      fontSize: 9,
+      cellPadding: 6,
+      textColor: [51, 65, 85], // slate-700
+      lineColor: [226, 232, 240], // slate-200
+      lineWidth: 0.5
+    },
+    headStyles: {
+      fillColor: [15, 23, 42], // slate-900
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      halign: 'center',
+      fontSize: 10,
+      cellPadding: 8
+    },
+    alternateRowStyles: {
+      fillColor: [248, 250, 252] // slate-50
+    },
+    columnStyles: {
+      0: { cellWidth: 85, halign: 'left' },   // Name
+      1: { cellWidth: 135, halign: 'left' },  // Email (increased width)
+      2: { cellWidth: 55, halign: 'center' }, // Status
+      3: { cellWidth: 45, halign: 'center' }, // Rentals
+      4: { cellWidth: 45, halign: 'center' }, // Reports
+      5: { cellWidth: 65, halign: 'center' }, // Date
+      6: { cellWidth: 65, halign: 'center' }  // Email Status
+    },
+    didParseCell: function(data) {
+      // Color-code status cells
+      if (data.column.index === 2) { // Status column
+        const status = data.cell.text[0];
+        if (status === 'ACTIVE') {
+          data.cell.styles.fillColor = [240, 253, 244]; // green-50
+          data.cell.styles.textColor = [22, 101, 52];   // green-800
+        } else if (status === 'BANNED') {
+          data.cell.styles.fillColor = [254, 242, 242]; // red-50
+          data.cell.styles.textColor = [153, 27, 27];   // red-800
+        } else if (status === 'PENDING') {
+          data.cell.styles.fillColor = [255, 251, 235]; // amber-50
+          data.cell.styles.textColor = [146, 64, 14];   // amber-800
+        }
+      }
+
+      // Color-code email verification
+      if (data.column.index === 6) { // Email Status column
+        const status = data.cell.text[0];
+        if (status === 'Verified') {
+          data.cell.styles.fillColor = [240, 249, 255]; // blue-50
+          data.cell.styles.textColor = [30, 64, 175];   // blue-800
+        } else {
+          data.cell.styles.fillColor = [255, 251, 235]; // amber-50
+          data.cell.styles.textColor = [146, 64, 14];   // amber-800
+        }
+      }
+    }
+  });
+
+  // === ENTERPRISE FOOTER ===
+  const pageCount = (doc as any).internal.getNumberOfPages();
+
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+
+    // Footer background
+    doc.setFillColor(248, 250, 252); // slate-50
+    doc.rect(0, pageHeight - 50, pageWidth, 50, 'F');
+
+    // Footer divider line
+    doc.setDrawColor(226, 232, 240); // slate-200
+    doc.setLineWidth(1);
+    doc.line(0, pageHeight - 50, pageWidth, pageHeight - 50);
+
+    // Footer content
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139); // slate-500
+
+    // Left side
+    doc.text("© 2025 Rentify Inc. | Confidential & Proprietary", 40, pageHeight - 25);
+    doc.text("This report contains sensitive user data - Handle with care", 40, pageHeight - 15);
+
+    // Right side
+    doc.text(`Page ${i} of ${pageCount}`, pageWidth - 100, pageHeight - 25);
+    doc.text(`Generated: ${currentDate}`, pageWidth - 100, pageHeight - 15);
+  }
+
+  // === SAVE WITH ENTERPRISE NAMING ===
+  const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+  const filename = `Rentify_UserReport_${timestamp}.pdf`;
+  doc.save(filename);
+
+  // Optional: Return doc object for further processing
+  return doc;
+}
+
+exportListingsPDF() {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+  const currentDate = new Date().toLocaleDateString();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  // === ENTERPRISE HEADER ===
+  doc.setFillColor(15, 23, 42); // slate-900
+  doc.rect(0, 0, pageWidth, 90, 'F');
+
+  // Logo placeholder
+  doc.setFillColor(71, 85, 105); // slate-600
+  doc.roundedRect(40, 25, 40, 40, 4, 4, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.text('R', 57, 50);
+
+  // Title
+  doc.setFontSize(24);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text('Listings Management Report', 100, 45);
+
+  // Subtitle
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(203, 213, 225); // slate-300
+  doc.text('Comprehensive Listings Overview & Insights', 100, 62);
+
+  // === REPORT METADATA ===
+  const metaY = 120;
+  doc.setFillColor(248, 250, 252); // slate-50
+  doc.rect(40, metaY, pageWidth - 80, 50, 'F');
+  doc.setDrawColor(226, 232, 240); // slate-200
+  doc.setLineWidth(1);
+  doc.rect(40, metaY, pageWidth - 80, 50);
+
+  doc.setTextColor(71, 85, 105); // slate-600
+  doc.setFontSize(10);
+  doc.text(`Generated on: ${currentDate}`, 55, metaY + 20);
+  doc.text(`Report ID: LST-${Date.now().toString().slice(-6)}`, 55, metaY + 35);
+
+  const reportTime = new Date().toLocaleTimeString();
+  doc.text(`Time: ${reportTime}`, 300, metaY + 20);
+  doc.text('Classification: Internal Use', 300, metaY + 35);
+
+  // === SUMMARY CARDS ===
+  const totalListings = this.filteredListings().length;
+  const activeListings = this.filteredListings().filter(l => l.status === 'ACTIVE').length;
+  const rentedListings = this.filteredListings().filter(l => l.status === 'RENTED').length;
+  const totalViews = this.filteredListings().reduce((sum, l) => sum + (l.views ?? 0), 0);
+
+  const summaryY = 200;
+  const cardWidth = 120;
+  const cardHeight = 80;
+  const cardSpacing = 15;
+
+  const stats = [
+    { label: "Total Listings", value: totalListings, bgColor: [59, 130, 246], icon: "📦" },
+    { label: "Active Listings", value: activeListings, bgColor: [16, 185, 129], icon: "✅" },
+    { label: "Rented Listings", value: rentedListings, bgColor: [249, 115, 22], icon: "🏠" },
+    { label: "Total Views", value: totalViews.toLocaleString(), bgColor: [139, 92, 246], icon: "👁️" }
+  ];
+
+  stats.forEach((stat, i) => {
+    const x = 40 + i * (cardWidth + cardSpacing);
+
+    // Card shadow
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(x + 2, summaryY + 2, cardWidth, cardHeight, 8, 8, 'F');
+
+    // Card background
+    doc.setFillColor(stat.bgColor[0], stat.bgColor[1], stat.bgColor[2]);
+    doc.roundedRect(x, summaryY, cardWidth, cardHeight, 8, 8, 'F');
+
+    // Card content
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(28);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${stat.value}`, x + 15, summaryY + 35);
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(stat.label, x + 15, summaryY + 50);
+  });
+
+  // === LISTINGS TABLE ===
+  const tableStartY = 340;
+
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(30, 41, 59); // slate-800
+  doc.text('Listings Directory', 40, tableStartY - 10);
+
+  const tableData = this.filteredListings().map(l => [
+    l.title || 'Untitled',
+    l.category ? l.category.charAt(0).toUpperCase() + l.category.slice(1) : 'N/A',
+    l.price != null ? `Rs${l.price}` : 'N/A',
+    (l.views ?? 0).toLocaleString(),
+    l.reportCount != null ? l.reportCount.toString() : '0',
+    l.createdAt ? new Date(l.createdAt).toLocaleDateString() : 'N/A',
+      l.status || 'N/A'
+  ]);
+
+  autoTable(doc, {
+    head: [['Title', 'Category', 'Price', 'Views', 'Reports', 'Created', 'status']],
+    body: tableData,
+    startY: tableStartY,
+    theme: 'grid',
+    styles: {
+      fontSize: 9,
+      cellPadding: 6,
+      textColor: [51, 65, 85], // slate-700
+      lineColor: [226, 232, 240], // slate-200
+      lineWidth: 0.5
+    },
+    headStyles: {
+      fillColor: [15, 23, 42], // slate-900
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      halign: 'center',
+      fontSize: 10,
+      cellPadding: 8
+    },
+    alternateRowStyles: {
+      fillColor: [248, 250, 252] // slate-50
+    },
+    columnStyles: {
+      0: { cellWidth: 100, halign: 'left' }, // Title
+      1: { cellWidth: 75, halign: 'center' }, // Category
+      2: { cellWidth: 65, halign: 'center' }, // Price
+      3: { cellWidth: 65, halign: 'center' }, // Status
+      4: { cellWidth: 65, halign: 'center' }, // Views
+      5: { cellWidth: 65, halign: 'center' }, // Reports
+      6: { cellWidth: 75, halign: 'center' }  // Created
+    },
+    didParseCell: function(data) {
+      // Status column coloring
+      if (data.column.index === 3) {
+        const status = data.cell.text[0];
+        if (status === 'ACTIVE') {
+          data.cell.styles.fillColor = [240, 253, 244]; // green-50
+          data.cell.styles.textColor = [22, 101, 52];   // green-800
+        } else if (status === 'RENTED') {
+          data.cell.styles.fillColor = [239, 246, 255]; // blue-50
+          data.cell.styles.textColor = [30, 64, 175];   // blue-800
+        } else {
+          data.cell.styles.fillColor = [255, 251, 235]; // amber-50
+          data.cell.styles.textColor = [146, 64, 14];   // amber-800
+        }
+      }
+    }
+  });
+
+  // === FOOTER ===
+  const pageCount = (doc as any).internal.getNumberOfPages();
+
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+
+    doc.setFillColor(248, 250, 252); // slate-50
+    doc.rect(0, pageHeight - 50, pageWidth, 50, 'F');
+
+    doc.setDrawColor(226, 232, 240); // slate-200
+    doc.setLineWidth(1);
+    doc.line(0, pageHeight - 50, pageWidth, pageHeight - 50);
+
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139); // slate-500
+
+    doc.text("© 2025 Rentify Inc. | Confidential & Proprietary", 40, pageHeight - 25);
+    doc.text("This report contains sensitive data - Handle with care", 40, pageHeight - 15);
+
+    doc.text(`Page ${i} of ${pageCount}`, pageWidth - 100, pageHeight - 25);
+    doc.text(`Generated: ${currentDate}`, pageWidth - 100, pageHeight - 15);
+  }
+
+  // === SAVE ===
+  const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+  const filename = `Rentify_ListingsReport_${timestamp}.pdf`;
+  doc.save(filename);
+
+  return doc;
+}
+
+
+  exportActivitiesPDF() {
+    const doc = new jsPDF();
+    const currentDate = new Date().toLocaleDateString();
+
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(15, 23, 42);
+    doc.text('Platform Activities Report', 20, 20);
+
+    doc.setFontSize(12);
+    doc.setTextColor(71, 85, 105);
+    doc.text(`Generated on: ${currentDate}`, 20, 30);
+    doc.text(`Total Activities: ${this.filteredActivities().length}`, 20, 38);
+
+    // Activity summary
+    const activityCounts = this.filteredActivities().reduce((acc, a) => {
+      acc[a.type ?? 'UNKNOWN'] = (acc[a.type ?? 'UNKNOWN'] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    let yPos = 46;
+    Object.entries(activityCounts).forEach(([type, count]) => {
+      doc.text(`${type.replace('_', ' ').toUpperCase()}: ${count}`, 20, yPos);
+      yPos += 8;
+    });
+
+    // Table
+    const tableData = this.filteredActivities().map(a => [
+      a.description || '',
+      (a.type ?? 'UNKNOWN').replace('_', ' ').toUpperCase(),
+      `${a.user?.firstName ?? ''} ${a.user?.lastName ?? ''}`.trim(),
+      a.timestamp ? new Date(a.timestamp).toLocaleString() : ''
+    ]);
+
+    autoTable(doc, {
+      head: [['Description', 'Type', 'User', 'Timestamp']],
+      body: tableData,
+      startY: yPos + 10,
+      theme: 'grid',
+      styles: { fontSize: 8, cellPadding: 3, textColor: [15, 23, 42] },
+      headStyles: { fillColor: [248, 250, 252], textColor: [15, 23, 42], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [248, 250, 252] }
+    });
+
+    doc.save(`activities-report-${currentDate}.pdf`);
+  }
+
+  exportReportsPDF() {
+    const doc = new jsPDF();
+    const currentDate = new Date().toLocaleDateString();
+
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(15, 23, 42);
+    doc.text('Reports Management Summary', 20, 20);
+
+    doc.setFontSize(12);
+    doc.setTextColor(71, 85, 105);
+    doc.text(`Generated on: ${currentDate}`, 20, 30);
+    doc.text(`Total Reports: ${this.filteredReports().length}`, 20, 38);
+
+    // Status summary
+    const pendingReports = this.filteredReports().filter(r => r.status === 'pending').length;
+    const resolvedReports = this.filteredReports().filter(r => r.status === 'resolved').length;
+    const dismissedReports = this.filteredReports().filter(r => r.status === 'dismissed').length;
+
+    doc.text(`Pending Reports: ${pendingReports}`, 20, 46);
+    doc.text(`Resolved Reports: ${resolvedReports}`, 20, 54);
+    doc.text(`Dismissed Reports: ${dismissedReports}`, 20, 62);
+
+    // Priority summary
+    const highPriority = this.filteredReports().filter(r => r.priority === 'high').length;
+    const mediumPriority = this.filteredReports().filter(r => r.priority === 'medium').length;
+    const lowPriority = this.filteredReports().filter(r => r.priority === 'low').length;
+
+    doc.text(`High Priority: ${highPriority}`, 120, 46);
+    doc.text(`Medium Priority: ${mediumPriority}`, 120, 54);
+    doc.text(`Low Priority: ${lowPriority}`, 120, 62);
+
+    // Table
+    const tableData = this.filteredReports().map(r => [
+      (r.type ?? '').toUpperCase(),
+      r.reason || '',
+      (r.status ?? '').toUpperCase(),
+      (r.priority ?? '').toUpperCase(),
+      `${r.reportedBy?.firstName ?? ''} ${r.reportedBy?.lastName ?? ''}`.trim(),
+      r.createdAt ? new Date(r.createdAt).toLocaleDateString() : ''
+    ]);
+
+    autoTable(doc, {
+      head: [['Type', 'Reason', 'Status', 'Priority', 'Reported By', 'Date']],
+      body: tableData,
+      startY: 75,
+      theme: 'grid',
+      styles: { fontSize: 8, cellPadding: 3, textColor: [15, 23, 42] },
+      headStyles: { fillColor: [248, 250, 252], textColor: [15, 23, 42], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [248, 250, 252] }
+    });
+
+    doc.save(`reports-summary-${currentDate}.pdf`);
+  }
+
+
+
+  exportAnalyticsPDF() {
+    const doc = new jsPDF();
+    const currentDate = new Date().toLocaleDateString();
+
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(15, 23, 42);
+    doc.text('Platform Analytics Report', 20, 20);
+
+    doc.setFontSize(12);
+    doc.setTextColor(71, 85, 105);
+    doc.text(`Generated on: ${currentDate}`, 20, 30);
+
+    // Overview
+    doc.setFontSize(14);
+    doc.setTextColor(15, 23, 42);
+    doc.text('Platform Overview', 20, 50);
+
+    const stats = this.stats?.() ?? {};
+    doc.setFontSize(10);
+    doc.setTextColor(71, 85, 105);
+    doc.text(`Total Users: ${(stats.totalUsers ?? 0).toLocaleString()}`, 20, 65);
+    doc.text(`Active Listings: ${(stats.totalListings ?? 0).toLocaleString()}`, 20, 75);
+    doc.text(`Active Rentals: ${(stats.activeRentals ?? 0).toLocaleString()}`, 20, 85);
+    doc.text(`Monthly Revenue: Rs${(stats.monthlyRevenue ?? 0).toLocaleString()}`, 20, 95);
+    doc.text(`User Growth: +${stats.userGrowth ?? 0}%`, 20, 105);
+    doc.text(`Pending Reports: ${stats.pendingReports ?? 0}`, 20, 115);
+
+    // Category performance
+    doc.setFontSize(14);
+    doc.setTextColor(15, 23, 42);
+    doc.text('Category Performance', 20, 135);
+
+    const categoryTableData = (this.categoryStats ?? []).map(c => [
+      c.name ?? '',
+      (c.listings ?? 0).toString(),
+      (c.activeRentals ?? 0).toString(),
+      c.listings ? `${(((c.activeRentals ?? 0) / c.listings) * 100).toFixed(1)}%` : '0%'
+    ]);
+
+    autoTable(doc, {
+      head: [['Category', 'Total Listings', 'Active Rentals', 'Utilization Rate']],
+      body: categoryTableData,
+      startY: 145,
+      theme: 'grid',
+      styles: { fontSize: 9, cellPadding: 4, textColor: [15, 23, 42] },
+      headStyles: { fillColor: [248, 250, 252], textColor: [15, 23, 42], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [248, 250, 252] }
+    });
+
+    doc.save(`analytics-report-${currentDate}.pdf`);
+  }
+
+
+  getUserStatusClass(status: 'ACTIVE' | 'INACTIVE' | 'BANNED'): string {
     switch (status) {
-      case 'active': return 'badge-success';
-      case 'suspended': return 'badge-warning';
-      case 'banned': return 'badge-error';
-      default: return 'badge-ghost';
+      case 'ACTIVE': return 'bg-emerald-100 text-emerald-800';
+      case 'INACTIVE': return 'bg-amber-100 text-amber-800';
+      case 'BANNED': return 'bg-red-100 text-red-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   }
 
   getListingStatusClass(status: string): string {
     switch (status) {
-      case 'active': return 'badge-success';
-      case 'inactive': return 'badge-warning';
-      case 'reported': return 'badge-error';
-      case 'banned': return 'badge-error';
-      default: return 'badge-ghost';
-    }
-  }
-
-  getAvailabilityClass(availability: string): string {
-    switch (availability) {
-      case 'available': return 'badge-success';
-      case 'rented': return 'badge-info';
-      case 'maintenance': return 'badge-warning';
-      default: return 'badge-ghost';
+      case 'ACTIVE': return 'bg-emerald-100 text-emerald-800';
+      case 'RENTED': return 'bg-blue-100 text-blue-800';
+      case 'INACTIVE': return 'bg-slate-100 text-slate-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   }
 
   getActivityBadgeClass(type: string): string {
     switch (type) {
-      case 'user_registration': return 'badge-primary';
-      case 'listing_created': return 'badge-secondary';
-      case 'rental_completed': return 'badge-success';
-      case 'report_submitted': return 'badge-warning';
-      case 'payment_processed': return 'badge-info';
-      default: return 'badge-ghost';
+      case 'user_registration': return 'bg-blue-100 text-blue-800';
+      case 'listing_created': return 'bg-emerald-100 text-emerald-800';
+      case 'rental_completed': return 'bg-purple-100 text-purple-800';
+      case 'report_submitted': return 'bg-amber-100 text-amber-800';
+      case 'payment_processed': return 'bg-indigo-100 text-indigo-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   }
 
   getReportStatusClass(status: string): string {
     switch (status) {
-      case 'pending': return 'badge-warning';
-      case 'resolved': return 'badge-success';
-      case 'dismissed': return 'badge-ghost';
-      default: return 'badge-ghost';
+      case 'pending': return 'bg-amber-100 text-amber-800';
+      case 'resolved': return 'bg-emerald-100 text-emerald-800';
+      case 'dismissed': return 'bg-slate-100 text-slate-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   }
 
   getPriorityClass(priority: string): string {
     switch (priority) {
-      case 'high': return 'badge-error';
-      case 'medium': return 'badge-warning';
-      case 'low': return 'badge-info';
-      default: return 'badge-ghost';
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-amber-100 text-amber-800';
+      case 'low': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-slate-100 text-slate-800';
     }
   }
 }

@@ -7,7 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth/auth.service';
 import { LocationService } from '../../services/location/location.service';
 import { Observable, Subject, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { take, takeUntil } from 'rxjs/operators';
 
 export interface SearchParams {
   product: string;
@@ -386,13 +386,22 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.router.navigate(['/how-it-works']);
   }
 
-  // User Profile Menu Actions
-  onProfile(): void {
-    console.log('Profile clicked');
-    this.isUserDropdownOpen.set(false);
-    this.closeMobileMenu();
-    this.router.navigate(['/profile']);
-  }
+ onProfile(): void {
+  console.log('Profile clicked');
+  this.isUserDropdownOpen.set(false);
+  this.closeMobileMenu();
+
+  this.user$
+    .pipe(take(1))
+    .subscribe(user => {
+      if (user?.email === "rentify.team101@gmail.com") {
+        this.router.navigate(['/adminstrator']);
+        console.log(user.firstName, user.email);
+      } else {
+        this.router.navigate(['/profile']);
+      }
+    });
+}
 
   onMyRentals(): void {
     console.log('My rentals clicked');
