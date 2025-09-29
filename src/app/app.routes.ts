@@ -15,6 +15,7 @@ import { AdminDashboardComponent } from './pages/admin-profile/admin-profile.com
 import { ReportPageComponent } from './pages/report-user/report-user.component';
 import { AdminGuardService } from './services/administrator/admin-guard.service';
 import { ChangePasswordComponent } from './pages/reset-password/reset-password.component';
+import { ReportFormComponent } from './pages/report/report.component';
 
 
 export const routes: Routes = [
@@ -54,7 +55,7 @@ export const routes: Routes = [
     ]
   },
    {path:"search",component:SearchResultsComponent},
-   {path:"report/:type/:id",component:ReportPageComponent},
+   {path:"report/:type/:id",component:ReportFormComponent},
   { path:'products/:id',component:ProductPageComponent},
   { path:'products/category/:category',component:ProductsByCategoryComponent},
    { path:'users/:id',component:VisitorUserProfileComponent},

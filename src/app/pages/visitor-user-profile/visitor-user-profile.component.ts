@@ -139,9 +139,9 @@ export class VisitorUserProfileComponent implements OnInit {
 
   onReportUser() {
     if (!this.user?.id) return;
-
+    const type = "user";
     // Navigate to report page or open modal
-    this.router.navigate(['/report-user', this.user.id]);
+    this.router.navigate(['/report/',type,this.user.id]);
 
     // Or open a report modal
     // const modalData = { userId: this.user.id, userName: `${this.user.firstName} ${this.user.lastName}` };

@@ -1,152 +1,241 @@
 <section class="bg-base-100 py-16 px-4">
-      <div class="max-w-7xl mx-auto">
-        <!-- Section Header -->
-        <div class="text-center mb-12">
-          <div class="badge badge-lg bg-base-200 text-base-content border-0 px-6 py-3 mb-6">
-            <svg class="w-4 h-4 mr-2 text-base-content opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-            </svg>
-            Featured Equipment
+  <div class="max-w-7xl mx-auto">
+    <!-- Section Header -->
+    <div class="text-center mb-12">
+      <div class="badge badge-lg bg-base-200 text-base-content border-0 px-6 py-3 mb-6">
+        <svg class="w-4 h-4 mr-2 text-base-content opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+        </svg>
+        Featured Equipment
+      </div>
+
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-base-content leading-tight mb-4">
+        <span class="block mb-2">Professional Equipment</span>
+        <span class="text-base-content opacity-70">Ready to Rent</span>
+      </h2>
+
+      <p class="text-lg text-base-content opacity-70 max-w-2xl mx-auto leading-relaxed">
+        Discover high-quality equipment from verified owners. All items are fully insured and professionally maintained.
+      </p>
+    </div>
+
+    <!-- Category Filter -->
+    <div class="flex flex-wrap justify-center gap-3 mb-12">
+      <button
+        *ngFor="let category of categories; trackBy: trackByCategory"
+        (click)="selectCategory(category.name)"
+        [class]="'btn btn-sm transition-all duration-200 ' +
+                 (selectedCategory === category.name
+                   ? 'bg-base-content text-base-100 border-base-content'
+                   : 'btn-ghost text-base-content opacity-70 hover:opacity-100 hover:bg-base-200')"
+        class="group">
+        <lucide-angular
+          [img]="category.icon"
+          class="w-4 h-4 mr-2 transition-transform group-hover:scale-110">
+        </lucide-angular>
+        {{ category.name }}
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="text-center py-12">
+      <div class="loading loading-spinner loading-lg text-base-content"></div>
+      <p class="text-base-content opacity-70 mt-4">Loading listings...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !loading" class="text-center py-12">
+      <div class="alert alert-error max-w-md mx-auto">
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>{{ error }}</span>
+      </div>
+      <button (click)="loadRandomListings()" class="btn btn-primary mt-4">Try Again</button>
+    </div>
+
+    <!-- Listings Grid -->
+    <div *ngIf="!loading && !error && getAllListings.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div
+        *ngFor="let listing of getAllListings; trackBy: trackByListing"
+        class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
+
+        <!-- Image Container -->
+        <div class="relative overflow-hidden rounded-t-lg">
+          <img
+            [src]="getListingImage(listing)"
+            [alt]="listing.title"
+            class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+
+            loading="lazy">
+
+          <!-- Status Badge -->
+          <div class="absolute top-3 left-3">
+            <div [class]="'badge text-xs font-semibold ' + getBadgeClass(listing.status)">
+              {{ getStatusBadgeText(listing) }}
+            </div>
           </div>
 
-          <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-base-content leading-tight mb-4">
-            <span class="block mb-2">Professional Equipment</span>
-            <span class="text-base-content opacity-70">Ready to Rent</span>
-          </h2>
+          <!-- Price -->
+          <div class="absolute top-3 right-3 bg-base-100 bg-opacity-95 backdrop-blur-sm rounded-lg px-3 py-1 shadow-sm">
+            <span class="text-base-content font-bold text-lg">
+              ${{ listing.price || 0 }}
+            </span>
+            <span class="text-base-content opacity-70 text-xs block">
+              /{{ listing.priceType || 'day' }}
+            </span>
+          </div>
 
-          <p class="text-lg text-base-content opacity-70 max-w-2xl mx-auto leading-relaxed">
-            Discover high-quality equipment from verified owners. All items are fully insured and professionally maintained.
-          </p>
-        </div>
-
-        <!-- Category Filter -->
-        <div class="flex flex-wrap justify-center gap-3 mb-12">
-          <button
-            *ngFor="let category of categories; trackBy: trackByCategory"
-            (click)="selectCategory(category.name)"
-            [class]="'btn btn-sm transition-all duration-200 ' +
-                     (selectedCategory === category.name
-                       ? 'bg-base-content text-base-100 border-base-content'
-                       : 'btn-ghost text-base-content opacity-70 hover:opacity-100 hover:bg-base-200')"
-            class="group">
-            <lucide-angular
-              [img]="category.icon"
-              class="w-4 h-4 mr-2 transition-transform group-hover:scale-110">
-            </lucide-angular>
-            {{ category.name }}
-          </button>
-        </div>
-
-        <!-- Listings Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          <div
-            *ngFor="let listing of getAllListings; trackBy: trackByListing"
-            class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
-
-            <!-- Image Container -->
-            <div class="relative overflow-hidden rounded-t-lg">
-              <img
-                [src]="listing.images[0]"
-                [alt]="listing.title"
-                class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
-
-              <!-- Badge -->
-              <div *ngIf="listing.status" class="absolute top-3 left-3">
-                <div [class]="'badge text-xs font-semibold ' + getBadgeClass(listing.priceType)">
-                  {{ listing.status }}
-                </div>
-              </div>
-
-              <!-- Price -->
-              <div class="absolute top-3 right-3 bg-base-100 bg-opacity-95 backdrop-blur-sm rounded-lg px-3 py-1 shadow-sm">
-                <span class="text-base-content font-bold text-lg">${{ listing.price }}</span>
-                <!-- <span class="text-base-content opacity-70 text-sm">/ {{ listing.priceUnit }}</span> -->
-              </div>
-            </div>
-
-            <!-- Card Body -->
-            <div class="card-body p-4">
-              <!-- Title -->
-              <h3 class="card-title text-base font-semibold text-base-content line-clamp-2 mb-2">
-                {{ listing.title }}
-              </h3>
-
-              <!-- Location -->
-              <div class="flex items-center text-base-content opacity-60 text-sm mb-3">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
-                {{ listing.address }}
-              </div>
-
-              <!-- Rating
-              <div class="flex items-center mb-3">
-                <div class="flex items-center">
-                  <svg class="w-4 h-4 text-warning mr-1" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
-                  </svg>
-                  <span class="text-base-content font-medium text-sm">{{ listing.rating}}</span>
-                  <span class="text-base-content opacity-50 text-sm ml-1">{{ listing.reviewCount }}</span>
-                </div>
-              </div> -->
-
-              <!-- Owner -->
-              <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center">
-                  <div class="avatar">
-                    <div class="w-6 h-6 rounded-full">
-                      <img [src]="listing.user.profilePicUrl" [alt]="listing.user.firstName">
-                    </div>
-                  </div>
-                  <span class="text-base-content text-sm ml-2">{{ listing.user.firstName }} {{ listing.user.lastName }}</span>
-                  <svg *ngIf="listing.user.nICVerified"
-                       class="w-4 h-4 text-base-content opacity-80 ml-1"
-                       fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                </div>
-              </div>
-
-              <!-- Features -->
-              <div class="mb-4">
-                <div class="flex flex-wrap gap-1">
-                  <span *ngFor="let feature of listing.tags.slice(0, 2)"
-                        class="badge badge-sm bg-base-200 text-base-content border-0 text-xs">
-                    {{ feature }}
-                  </span>
-                  <span *ngIf="listing.tags.length > 2"
-                        class="badge badge-sm bg-base-200 text-base-content border-0 text-xs opacity-70">
-                    +{{ listing.tags.length - 2 }} more
-                  </span>
-                </div>
-              </div>
-
-              <!-- Action Button -->
-              <div class="card-actions justify-end">
-                <button (click)="goToListing(listing.id)" class="btn bg-slate-700 hover:bg-slate-600 text-white border-slate-700 btn-sm w-full">
-                  <span class="transition-transform group-hover:translate-x-1">View Details</span>
-                  <svg class="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1"
-                       fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                  </svg>
-                </button>
-              </div>
-            </div>
+          <!-- Views counter -->
+          <div *ngIf="listing.views && listing.views > 0"
+               class="absolute bottom-3 left-3 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+            👁️ {{ listing.views }}
           </div>
         </div>
 
-        <!-- View More Section -->
-        <div class="text-center mt-12">
-          <button class="btn btn-outline border-base-content text-base-content hover:bg-base-content hover:text-base-100 btn-lg group">
-            <span class="transition-transform group-hover:translate-x-1">View All Equipment</span>
-            <svg class="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1"
-                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        <!-- Card Body -->
+        <div class="card-body p-4">
+          <!-- Title -->
+          <h3 class="card-title text-base font-semibold text-base-content line-clamp-2 mb-2">
+            {{ listing.title }}
+          </h3>
+
+          <!-- Brand and Model -->
+          <div *ngIf="listing.brand || listing.model" class="text-sm text-base-content opacity-60 mb-2">
+            <span *ngIf="listing.brand">{{ listing.brand }}</span>
+            <span *ngIf="listing.brand && listing.model"> • </span>
+            <span *ngIf="listing.model">{{ listing.model }}</span>
+          </div>
+
+          <!-- Category -->
+          <div *ngIf="listing.category" class="text-xs text-base-content opacity-50 mb-2">
+            📂 {{ listing.category }}
+          </div>
+
+          <!-- Location -->
+          <div class="flex items-start text-base-content opacity-60 text-sm mb-3">
+            <svg class="w-4 h-4 mr-1 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
             </svg>
-          </button>
+            <span class="line-clamp-2">{{ getAddress(listing) }}</span>
+          </div>
+
+          <!-- Condition -->
+          <div *ngIf="listing.condition" class="flex items-center text-sm mb-3">
+            <span class="text-base-content opacity-60">Condition:</span>
+            <span class="ml-2 badge badge-sm badge-outline">{{ listing.condition }}</span>
+          </div>
+
+          <!-- Rating -->
+          <div *ngIf="hasRating(listing)" class="flex items-center mb-3">
+            <div class="flex items-center">
+              <svg class="w-4 h-4 text-yellow-400 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+              </svg>
+              <span class="text-base-content font-medium text-sm">{{ getRating(listing).toFixed(1) }}</span>
+              <span class="text-base-content opacity-50 text-sm ml-1">({{ getReviewCount(listing) }})</span>
+            </div>
+          </div>
+
+          <!-- Owner Info -->
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center min-w-0 flex-1">
+              <div class="avatar flex-shrink-0">
+                <div class="w-6 h-6 rounded-full">
+                  <img
+                    [src]="getUserProfileImage(listing)"
+                    [alt]="getUserName(listing)"
+
+                    loading="lazy">
+                </div>
+              </div>
+              <span class="text-base-content text-sm ml-2 truncate">
+                {{ getUserName(listing) }}
+              </span>
+              <svg *ngIf="isUserVerified(listing)"
+                   class="w-4 h-4 text-green-500 ml-1 flex-shrink-0"
+                   fill="currentColor" viewBox="0 0 24 24"
+                   title="Verified User">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <div *ngIf="listing.favorites && listing.favorites > 0"
+                 class="text-xs text-base-content opacity-60 flex-shrink-0 ml-2">
+              ❤️ {{ listing.favorites }}
+            </div>
+          </div>
+
+          <!-- Delivery Options -->
+          <div class="text-xs text-base-content opacity-60 mb-3">
+            <span class="flex items-center">
+              <svg class="w-3 h-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+              </svg>
+              <span>{{ getDeliveryInfo(listing) }}</span>
+            </span>
+          </div>
+
+          <!-- Tags -->
+          <div class="mb-4" *ngIf="listing.tags && listing.tags.length > 0">
+            <div class="flex flex-wrap gap-1">
+              <span *ngFor="let tag of listing.tags.slice(0, 2)"
+                    class="badge badge-sm bg-base-200 text-base-content border-0 text-xs">
+                {{ tag }}
+              </span>
+              <span *ngIf="listing.tags.length > 2"
+                    class="badge badge-sm bg-base-200 text-base-content border-0 text-xs opacity-70">
+                +{{ listing.tags.length - 2 }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Action Button -->
+          <div class="card-actions justify-end">
+            <button
+              (click)="goToListing(listing.id)"
+              class="btn bg-slate-700 hover:bg-slate-600 text-white border-slate-700 btn-sm w-full group"
+              [disabled]="!listing.id || listing.status === 'RENTED'"
+              [class.opacity-50]="listing.status === 'RENTED'">
+              <span class="transition-transform group-hover:translate-x-1">
+                {{ listing.status === 'RENTED' ? 'Currently Rented' : 'View Details' }}
+              </span>
+              <svg *ngIf="listing.status !== 'RENTED'"
+                   class="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1"
+                   fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && !error && getAllListings.length === 0" class="text-center py-12">
+      <div class="text-base-content opacity-50">
+        <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+        </svg>
+        <h3 class="text-lg font-semibold mb-2">No listings available</h3>
+        <p>Check back later for new equipment listings.</p>
+      </div>
+      <button (click)="loadRandomListings()" class="btn btn-outline mt-4">Refresh</button>
+    </div>
+
+    <!-- View More Section -->
+    <div *ngIf="!loading && !error && getAllListings.length > 0" class="text-center mt-12">
+      <button class="btn btn-outline border-base-content text-base-content hover:bg-base-content hover:text-base-100 btn-lg group">
+        <span class="transition-transform group-hover:translate-x-1">View All Equipment</span>
+        <svg class="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+</section>

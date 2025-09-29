@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -68,6 +68,9 @@ interface PlatformStats {
 export class AdminDashboardComponent implements OnInit, OnDestroy {
   activeTab = signal('users');
   private destroy$ = new Subject<void>();
+  menuOpen = false;
+
+
 
   // Search terms
   userSearchTerm = '';
@@ -116,7 +119,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     { id: 'reports', label: 'Reports' }
   ];
 
-  constructor(private http: HttpClient,private adminService:AdministratorService) {}
+  constructor(private http: HttpClient,private adminService:AdministratorService, private eRef:ElementRef) {}
 
   ngOnInit() {
     this.loadData();
@@ -228,6 +231,19 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   viewUser(user: User) {
     console.log('Viewing user details:', user);
   }
+
+   toggleMenu() {
+    this.menuOpen = !this.menuOpen;
+  }
+
+  // Close all open menus if clicked outside
+  @HostListener('document:click', ['$event'])
+  clickOutside(event: Event) {
+    if (!this.eRef.nativeElement.contains(event.target)) {
+      this.filteredUsers().forEach(user => user.menuOpen = false);
+    }
+  }
+
 
   deactivateListing(listing: Listing) {
     console.log('Deactivating listing:', listing);

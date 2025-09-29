@@ -11,7 +11,7 @@ export type User = {
   nICVerified?: boolean;
   emailVerified?: boolean;
   status?:  'ACTIVE' | 'INACTIVE' | 'BANNED'; // adjust to match your `Status` enum
-  profilePicUrl?: string; // Or `Blob | null` if you're returning it directly
+  profilePicUrl?: string;
   createdAt?:Date;
   totalRating?: number;
   ratingCount?: number;
@@ -26,5 +26,6 @@ export type User = {
   website?:string,
   reports?:number,
   role?:string,
+  menuOpen?:boolean
 
 }

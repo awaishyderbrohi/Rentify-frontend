@@ -36,15 +36,7 @@ import { ActivatedRoute, Router } from '@angular/router';
   imports: [CommonModule, FormsModule],
   template: `
     <div class="min-h-screen bg-slate-50 py-8 px-4">
-      <!-- Debug Information - Remove in production -->
-      <div class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4 max-w-2xl mx-auto">
-        <h4 class="text-blue-800 font-medium">Debug Info:</h4>
-        <p class="text-blue-700 text-sm">Current URL: {{ getCurrentUrl() }}</p>
-        <p class="text-blue-700 text-sm">Reported ID: {{ reportedId() }}</p>
-        <p class="text-blue-700 text-sm">Report Type: {{ reportType() }}</p>
-        <p class="text-blue-700 text-sm">Is Loading: {{ isLoading() }}</p>
-        <p class="text-blue-700 text-sm">Error: {{ errorMessage() || 'None' }}</p>
-      </div>
+
       <!-- Loading State -->
       <div *ngIf="isLoading()" class="max-w-2xl mx-auto text-center py-12">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-700 mx-auto"></div>
@@ -113,8 +105,8 @@ import { ActivatedRoute, Router } from '@angular/router';
               </svg>
             </div>
             <div>
-              <p class="text-slate-800 font-medium">{{ reportType() === 'user' ? 'User' : 'Listing' }} ID: {{ reportedId() }}</p>
-              <p class="text-slate-600 text-sm">{{ reportType() === 'user' ? 'User Profile' : 'Property Listing' }}</p>
+              <p class="text-slate-800 font-medium">{{ reportType() === 'user' ? 'User' : 'Listing' }}: {{ reportedId() }}</p>
+              <p class="text-slate-600 text-sm">{{ reportType() === 'user' ? 'User Profile' : 'Equipment Listing' }}</p>
             </div>
           </div>
         </div>

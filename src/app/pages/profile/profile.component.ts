@@ -71,7 +71,7 @@ import { ListingsService } from '../../services/listings/listings.service';
 
             <!-- Earnings Section -->
             <div *ngIf="activeSection === 'earnings'" class="space-y-8">
-              <app-earnings></app-earnings>
+              <app-earnings-section/>
             </div>
 
             <!-- Other sections placeholder -->

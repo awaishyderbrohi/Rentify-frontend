@@ -10,31 +10,11 @@ interface CategoryItem {
   icon: any;
 }
 
-interface ListingItem {
-  id: string;
-  title: string;
-  category: string;
-  price: number;
-  priceUnit: string;
-  location: string;
-  rating: number;
-  reviewCount: number;
-  image: string;
-  badge?: string;
-  badgeType?: 'featured' | 'popular' | 'new';
-  owner: {
-    name: string;
-    avatar: string;
-    verified: boolean;
-  };
-  features: string[];
-}
-
 @Component({
   selector: 'app-featured-listings',
   standalone: true,
   imports: [CommonModule, LucideAngularModule],
-  templateUrl: `./featured-listings.html`,
+  templateUrl: './featured-listings.html',
   styles: [`
     .line-clamp-2 {
       display: -webkit-box;
@@ -82,10 +62,22 @@ interface ListingItem {
     .group:hover .group-hover\\:scale-105 {
       transform: scale(1.05);
     }
+
+    /* Loading spinner */
+    .loading {
+      @apply inline-block animate-spin rounded-full border-4 border-solid border-current border-r-transparent;
+    }
+
+    .loading-lg {
+      @apply h-10 w-10;
+    }
   `]
 })
-export class FeaturedListingsComponent implements OnInit{
+export class FeaturedListingsComponent implements OnInit {
   selectedCategory = 'All';
+  listings: Listing[] = [];
+  loading = false;
+  error: string | null = null;
 
   // Categories with Lucide icons
   categories: CategoryItem[] = [
@@ -97,38 +89,83 @@ export class FeaturedListingsComponent implements OnInit{
     // { name: 'Sports', icon: Trophy }
   ];
 
-  listings: Listing[] = [];
-
-  constructor(private listingsService:ListingsService,private router:Router){}
-
+  constructor(
+    private listingsService: ListingsService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
-     this.listingsService.getRandomItems(8).subscribe({
-      next:(res)=>{
-        this.listings =  res.t
-      }
-    })
-
+    this.loadRandomListings();
   }
-   get getAllListings():Listing[] {
-    return this.listings;
 
+  loadRandomListings(): void {
+    this.loading = true;
+    this.error = null;
+
+    this.listingsService.getRandomItems(8).subscribe({
+      next: (response) => {
+        console.log('Full API Response:', response);
+
+        // Check different possible response structures
+        if (response && response.t && Array.isArray(response.t)) {
+          this.listings = response.t;
+          console.log('Using response.t:', this.listings.length, 'items');
+        } else {
+          console.warn('Unexpected response structure. Full response:', response);
+          if (response) {
+            console.warn('Response keys:', Object.keys(response));
+          }
+          this.listings = [];
+        }
+
+        console.log(`Loaded ${this.listings.length} listings`);
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading listings:', error);
+        this.error = 'Failed to load listings. Please try again.';
+        this.listings = [];
+        this.loading = false;
+      }
+    });
+  }
+
+  get getAllListings(): Listing[] {
+    if (!this.listings || !Array.isArray(this.listings)) {
+      console.log('No listings array available');
+      return [];
+    }
+
+    // Filter out any invalid listings but be more lenient
+    const validListings = this.listings.filter(listing => {
+      const isValid = listing && listing.id && listing.title;
+
+      if (!isValid) {
+        console.log('Invalid listing found:', listing);
+      }
+
+      return isValid;
+    });
+
+    console.log(`Returning ${validListings.length} valid listings out of ${this.listings.length} total`);
+    return validListings;
   }
 
   selectCategory(category: string): void {
     this.selectedCategory = category;
+    // Add category filtering logic here if needed
   }
 
-  getBadgeClass(badgeType: string | undefined): string {
-    switch (badgeType) {
-      case 'featured':
-        return 'bg-base-content text-base-100';
-      case 'popular':
-        return 'bg-base-300 text-base-content';
-      case 'new':
-        return 'bg-base-200 text-base-content';
+  getBadgeClass(status: string): string {
+    switch (status) {
+      case 'ACTIVE':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'RENTED':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'INACTIVE':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
       default:
-        return 'bg-base-200 text-base-content';
+        return 'bg-blue-100 text-blue-800 border-blue-200';
     }
   }
 
@@ -137,10 +174,85 @@ export class FeaturedListingsComponent implements OnInit{
   }
 
   trackByListing(index: number, listing: Listing): string {
-    return listing.id;
+    return listing.id || index.toString();
   }
 
-  goToListing(id:string){
-    this.router.navigate(['/products/',id])
+  goToListing(id: string): void {
+    if (id) {
+      this.router.navigate(['/products/', id]);
+    }
+  }
+
+  // Helper methods for safe data access
+  getListingImage(listing: Listing): string {
+    if (listing.images && listing.images.length > 0 && listing.images[0]) {
+      return listing.images[0];
+    }
+    return '/assets/images/placeholder-equipment.jpg';
+  }
+
+  getUserName(listing: Listing): string {
+    if (listing.user) {
+      const firstName = listing.user.firstName || '';
+      const lastName = listing.user.lastName || '';
+      const fullName = `${firstName} ${lastName}`.trim();
+      return fullName || 'Anonymous User';
+    }
+    return 'Anonymous User';
+  }
+
+  getAddress(listing: Listing): string {
+    const parts = [];
+
+    if (listing.area) parts.push(listing.area);
+    if (listing.city) parts.push(listing.city);
+    if (listing.address && !parts.some(part => part.includes(listing.address))) {
+      parts.unshift(listing.address);
+    }
+
+    return parts.length > 0 ? parts.join(', ') : 'Location not specified';
+  }
+
+  getStatusBadgeText(listing: Listing): string {
+    switch (listing.status) {
+      case 'ACTIVE': return 'Available';
+      case 'RENTED': return 'Rented';
+      case 'INACTIVE': return 'Unavailable';
+      default: return listing.status || 'Unknown';
+    }
+  }
+
+  getUserProfileImage(listing: Listing): string {
+    if (listing.user && listing.user.profilePicUrl) {
+      return listing.user.profilePicUrl;
+    }
+    return '/assets/images/default-avatar.jpg';
+  }
+
+  isUserVerified(listing: Listing): boolean {
+    return !!(listing.user && listing.user.nICVerified);
+  }
+
+  getDeliveryInfo(listing: Listing): string {
+    const delivery = listing.deliveryOptions;
+    if (!delivery) return 'Contact for details';
+
+    const options = [];
+    if (delivery.pickup) options.push('Pickup');
+    if (delivery.delivery) options.push('Delivery');
+
+    return options.length > 0 ? options.join(' • ') : 'Contact for details';
+  }
+
+  hasRating(listing: Listing): boolean {
+    return !!(listing.rating && listing.rating > 0);
+  }
+
+  getRating(listing: Listing): number {
+    return listing.rating || 0;
+  }
+
+  getReviewCount(listing: Listing): number {
+    return listing.reviewCount || 0;
   }
 }
