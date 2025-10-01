@@ -12,7 +12,6 @@ import { SearchResultsComponent } from './pages/search-result/search-result.comp
 import { ProductsByCategoryComponent } from './pages/category-products/category-products.component';
 import { VisitorUserProfileComponent } from './pages/visitor-user-profile/visitor-user-profile.component';
 import { AdminDashboardComponent } from './pages/admin-profile/admin-profile.component';
-import { ReportPageComponent } from './pages/report-user/report-user.component';
 import { AdminGuardService } from './services/administrator/admin-guard.service';
 import { ChangePasswordComponent } from './pages/reset-password/reset-password.component';
 import { ReportFormComponent } from './pages/report/report.component';
